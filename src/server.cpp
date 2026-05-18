@@ -46,7 +46,7 @@ void Server::run(){
         return;
     }
 
-    std::cout << "Server listening on port" << port << "\n";
+    std::cout << "Server listening on port " << port << "\n";
 
     std::vector<std::thread> threads;
     commandHandler cmdHandler;
@@ -78,6 +78,8 @@ void Server::run(){
     }
 
     // before shutdown check for persistent db
+
+    // shutdown
 
 
     
