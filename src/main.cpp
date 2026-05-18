@@ -8,7 +8,7 @@
 int main(int argc, char* argv[]){
 
     int port = 6379;    // default port
-    if(argc >=2) port = std::stoi(argv[1]);      // user provided port
+    if(argc >=2) port = std::stoi(argv[1]);      // client provided port
 
 
     Server server(port);   
