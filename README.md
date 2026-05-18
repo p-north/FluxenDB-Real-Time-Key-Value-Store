@@ -24,13 +24,13 @@ FluxenDB — Real-Time Key-Value Database Engine
 - **RENAME**: `RENAME <old> <new>` → rename key
 
 ### Lists
+- **LSET**: `LSET <key> <index> <value>` → set element
 - **LGET**: `LGET <key>` → all elements
 - **LLEN**: `LLEN <key>` → length
 - **LPUSH/RPUSH**: `LPUSH <key> <v1> [v2 ...]` / `RPUSH` → push multiple
 - **LPOP/RPOP**: `LPOP <key>` / `RPOP <key>` → pop one
 - **LREM**: `LREM <key> <count> <value>` → remove occurrences
 - **LINDEX**: `LINDEX <key> <index>` → get element
-- **LSET**: `LSET <key> <index> <value>` → set element
 
 ### Hashes
 - **HSET**: `HSET <key> <field> <value>`
