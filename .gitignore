@@ -1,0 +1,6 @@
+build/
+*.o
+*.obj
+*.d
+*.exe
+my_db_server
