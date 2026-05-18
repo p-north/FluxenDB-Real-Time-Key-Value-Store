@@ -8,6 +8,28 @@
 8. Command Processing and Response Formatting
 9. Singleton Pattern
 10. Bitwise Operators '|='
+-----------------------------
+
+
+Database Storage:
+
+Key-Value (K)
+kv_store["name"] = "Alice"
+kv_store["city"] = "Berlin"
+
+List (L)
+list_store["fruits"] = {"apple", "banana", "orange"};
+list_store["colors"] = {"red", "blue", "green"};
+
+Hash (H)
+hash_store["user:100"] = {
+      {"name", "Eve"},
+      {"age", "25"},
+      {"email", "eve@example.com"}
+}
+
+
+
 
 
 ---------------------
