@@ -1,7 +1,9 @@
-#include <../include/commandHandler.h>
+#include "../include/commandHandler.h"
+#include "../include/database.h"
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
 #include <algorithm>
 
 // RESP parser:
@@ -71,14 +73,32 @@ std::string commandHandler::processCommand(const std::string& commandLine){
     auto tokens = parseRespCommand(commandLine);
     if(tokens.empty()) return "-Error: Empty command\r\n";
 
+    // // DEBUGGIN ONLY
+    // for(auto&t : tokens)  std::cout << t << "\n";
+      
+    
+
+    // get the first command
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
     std::ostringstream response;
-
     // connnect to database
+    Database& db = Database::getInstance();
+
 
     // check commands 
+    if(cmd == "PING"){
+        response << "+PONG\r\n";
+    }
+    else if(cmd == "ECHO"){
+        //...
+    }
+    // TODO: Key-value operations
+    // TODO: List operations
+    // TODO: Hash operations
+    else{
+        response << "-Error: unknown command\r\n";
+    }
 
-
-    return response;
+    return response.str();
 }
