@@ -45,4 +45,17 @@ FluxenDB — Real-Time Key-Value Database Engine
 
 ---
 
+## Design & Architecture
 
+- **Concurrency:** Each client is handled in its own `std::thread`.  
+- **Synchronization:** A single `std::mutex db_mutex` guards all in-memory stores.  
+- **Data Stores:**  
+  - `kv_store` (`unordered_map<string,string>`) for strings  
+  - `list_store` (`unordered_map<string,vector<string>>`) for lists  
+  - `hash_store` (`unordered_map<string,unordered_map<string,string>>`) for hashes
+- **Expiration:** Lazy eviction on each access via `purgeExpired()`, plus TTL map `expiry_map`.  
+- **Persistence:** Simplified RDB: text‐based dump/load in `dump.my_rdb`.  
+- **Singleton Pattern:** `RedisDatabase::getInstance()` enforces one shared instance.  
+- **RESP Parsing:** Custom parser in `RedisCommandHandler` supports both inline and array formats.
+
+---
