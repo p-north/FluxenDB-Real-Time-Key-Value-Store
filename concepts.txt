@@ -1,0 +1,25 @@
+1. TCP/IP and Socket Programming
+2. Concurrency and Multithreading
+3. Mutex and Sync...
+4. Data Structures -> Hash Tables, Vectors
+5. Parsing and REPS protocol 
+6. Files I/O Presitance
+7. Signal Handling
+8. Command Processing and Response Formatting
+9. Singleton Pattern
+10. Bitwise Operators '|='
+
+
+---------------------
+NEXT STEPS: CLoud Deployment
+
+Virtual Machine / EC2
+┌─────────────────────────────────────┐
+│  DB Server (C++)                    │
+│                                     │
+│  Every 60s → Metrics → CloudWatch ──┼──→ Alarm → SNS → Email
+│  On snapshot → dump.rdb → S3   ─────┼──→ versioned, durable
+│  On startup ← latest.rdb ← S3  ─────┼──← restore on new instance
+└─────────────────────────────────────┘
+         ↕ TCP
+   Qt6 GUI Client (your desktop)
