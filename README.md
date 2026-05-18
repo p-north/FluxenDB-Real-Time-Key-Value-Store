@@ -6,7 +6,7 @@ FluxenDB — Real-Time Key-Value Database Engine
 ### Common Commands
 
 - **PING**
-    *Use case:* Before embarking on any data operation. Client can send a 'PING' to ensure that the redis server is alive and responsive-like knocking on a door before entering.
+    *Use case:* Before embarking on any data operation. Client can send a 'PING' to ensure that the server is alive and responsive-like knocking on a door before entering.
 
 - **ECHO**
     *Use case:* A debugging too or simple utility to test network connectivity by having the server repeat sent message.
@@ -55,7 +55,7 @@ FluxenDB — Real-Time Key-Value Database Engine
   - `hash_store` (`unordered_map<string,unordered_map<string,string>>`) for hashes
 - **Expiration:** Lazy eviction on each access via `purgeExpired()`, plus TTL map `expiry_map`.  
 - **Persistence:** Simplified RDB: text‐based dump/load in `dump.my_rdb`.  
-- **Singleton Pattern:** `RedisDatabase::getInstance()` enforces one shared instance.  
-- **RESP Parsing:** Custom parser in `RedisCommandHandler` supports both inline and array formats.
+- **Singleton Pattern:** `Database::getInstance()` enforces one shared instance.  
+- **RESP Parsing:** Custom parser in `CommandHandler` supports both inline and array formats.
 
 ---
