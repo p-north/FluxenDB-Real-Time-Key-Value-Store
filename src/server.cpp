@@ -13,13 +13,13 @@ Server::Server(int port) : port(port), server_socket(-1), running(true) {
 void Server::shutdown(){
     running = false;
     if(server_socket != -1) close(server_socket);
-    cout << "Server shutdown complete!\n";
+    std::cout << "Server shutdown complete!\n";
 }
 
 void Server::run(){
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(server_socket < 0) {
-        cerr << "Error creating server socket\n";
+        std::cerr << "Error creating server socket\n";
         return;
     }
 
@@ -33,7 +33,7 @@ void Server::run(){
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if(bind(server_socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0){
-        cerr << "Error binding server socket\n";
+        std::cerr << "Error binding server socket\n";
         return;
     }
 
@@ -42,7 +42,7 @@ void Server::run(){
         return;
     }
 
-    cout << "Server listening on port" << port << "\n";
+    std::cout << "Server listening on port" << port << "\n";
     
 
     

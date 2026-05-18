@@ -3,13 +3,13 @@
 
 #include<atomic>
 #include<string>
-using namespace std;
+
 
 class Server{
     private:
         int port;
         int server_socket;
-        atomic<bool> running;
+        std::atomic<bool> running;
 
     public:
         Server(int port);
