@@ -11,6 +11,9 @@ class Server{
         int server_socket;
         std::atomic<bool> running;
 
+        // Seup signal handling for graceful shutdwn (ctrl + c)
+        void setupSignalHandler();
+
     public:
         Server(int port);
         void run();

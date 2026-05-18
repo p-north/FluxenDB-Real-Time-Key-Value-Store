@@ -1,17 +1,31 @@
 #include "../include/server.h"
+#include "../include/commandHandler.h"
+#include "../include/database.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
-#include "../include/commandHandler.h"
+#include <signal.h>
 #include <vector>
 #include <thread>
 #include <cstring>
 
 static Server* globalServer = nullptr;
 
+void signalHandler(int signum){
+    if(globalServer)
+        std::cout << "Caught signal " << signum << ", shutting down...\n";
+        globalServer->shutdown();
+    exit(signum);
+}
+
+void Server::setupSignalHandler(){
+    signal(SIGINT, signalHandler);
+}
+
 Server::Server(int port) : port(port), server_socket(-1), running(true) {
     globalServer = this;
+    setupSignalHandler();
 }
 
 void Server::shutdown(){
@@ -78,9 +92,12 @@ void Server::run(){
     }
 
     // before shutdown check for persistent db
+    if(Database::getInstance().dump("dump.my_db"))
+         std::cout  << "Database Dumped to dump.my_db\n";
 
+    else
+        std::cerr << "Error dumping database";
     // shutdown
-
 
     
 }
