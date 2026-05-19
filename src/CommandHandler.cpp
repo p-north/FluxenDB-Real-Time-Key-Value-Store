@@ -87,13 +87,48 @@ std::string commandHandler::processCommand(const std::string& commandLine){
 
 
     // check commands 
+    // common commands--------------------
     if(cmd == "PING"){
         response << "+PONG\r\n";
     }
     else if(cmd == "ECHO"){
-        //...
+        if(tokens.size() < 2){
+            response << "-Error: ECHO requires a messag\r\n";
+        }
+        else{
+            response << "+" << tokens[1] << "\r\n";
+
+        }
+
     }
-    // TODO: Key-value operations
+    else if(cmd == "FLUSHALL"){
+        db.flushAll();
+        response << "+OK\r\n";
+    }
+    // TODO: Key-value operations------------
+    else if (cmd == "SET"){
+        if(tokens.size() < 3){
+            response << "-Error: SET requires key and value\r\n";
+        }
+        else{
+            db.set(tokens[1], tokens[2]);
+            response << "+OK\r\n";
+        }
+    }
+    else if (cmd == "GET"){
+         if(tokens.size() < 2){
+            response << "-Error: GET requires key\r\n";
+        }
+        else{
+            std::string value;
+            if(db.get(tokens[1], value))
+                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            else
+                response << "$-1\r\n";
+        }
+    }
+    else if (cmd == "KEYS"){}
+    else if (cmd == "TYPE"){}
     // TODO: List operations
     // TODO: Hash operations
     else{
