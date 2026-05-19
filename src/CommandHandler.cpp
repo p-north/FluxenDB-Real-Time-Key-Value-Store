@@ -127,8 +127,51 @@ std::string commandHandler::processCommand(const std::string& commandLine){
                 response << "$-1\r\n";
         }
     }
-    else if (cmd == "KEYS"){}
-    else if (cmd == "TYPE"){}
+    else if (cmd == "KEYS"){
+        std::vector<std::string> allKeys = db.keys();
+        response << "*" << allKeys.size() << "\r\n";
+        for(const auto& key : allKeys){
+            response << "$" << key.size() << "\r\n" << key << "\r\n";
+        }
+    }
+    else if (cmd == "TYPE"){
+        if(tokens.size() < 2){
+            response << "-Error: TYPE requires key\r\n";
+        }
+        else{
+            response << "+" << db.type(tokens[1]) << "\r\n";
+        }
+    }
+    else if (cmd == "DEL" || cmd == "UNLINK"){
+        if(tokens.size() < 2){
+            response << "-Error: " << cmd << "requires key" << 
+        "\r\n";
+        }
+        else{
+            bool res = db.del(tokens[1]);
+            response << ":" << (res ? 1:0) << "\r\n";
+        }
+    }
+    else if(cmd == "EXPIRE"){
+        if(tokens.size() < 3){
+            response << "-Error: EXPIRE requires key and time in seconds\r\n";
+        }
+        else{
+            db.expire(tokens[1], tokens[2]);
+            response << "+DK\r\n";
+
+        }
+    }
+    else if (cmd == "RENAME"){
+        if(tokens.size() < 3){
+            response << "-Error: RENAME requires old key name and new key name\r\n";
+        }
+        else{
+            db.rename(tokens[1], tokens[2]);
+            response << "+DK\r\n";
+
+        }
+    }
     // TODO: List operations
     // TODO: Hash operations
     else{

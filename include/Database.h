@@ -5,6 +5,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
 
 class Database{
     public:
@@ -21,7 +22,9 @@ class Database{
         std::string type(const std::string& key);
         bool del(const std::string& key);
         // expire
+        bool  expire(const std::string& key, const std::string& seconds);
         // rename
+        bool rename(const std::string& oldKey, const std::string& newKey);
 
         // TODO: Implement List operations
 
@@ -39,6 +42,7 @@ class Database{
         ~Database() = default;
         Database(const Database&) = delete;
         Database& operator=(const Database&) = delete;
+        std::mutex db_mutex;
 
         // kv_store from string(key) -> string(value)
         std::unordered_map<std::string, std::string> kv_store;
@@ -47,7 +51,7 @@ class Database{
         // hash_store from string(key) -> map(value)
         std::unordered_map<std::string, std::unordered_map<std::string, std::string>> hash_store;
 
-        std::mutex db_mutex;
+        std::unordered_map<std::string, std::chrono::steady_clock::time_point> expirey_map;
 };
 
 #endif
