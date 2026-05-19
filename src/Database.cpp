@@ -12,6 +12,8 @@ Database &Database::getInstance()
 }
 
 /*
+    Database persistance
+
     Memory -> File - dump()
     File -> Memory - load()
 

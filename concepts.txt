@@ -40,8 +40,8 @@ Virtual Machine / EC2
 │  DB Server (C++)                    │
 │                                     │
 │  Every 60s → Metrics → CloudWatch ──┼──→ Alarm → SNS → Email
-│  On snapshot → dump.rdb → S3   ─────┼──→ versioned, durable
-│  On startup ← latest.rdb ← S3  ─────┼──← restore on new instance
+│  On snapshot/dump → dump.rdb → S3   ─────┼──→ versioned, durable
+│  On startup/load ← latest.rdb ← S3  ─────┼──← restore on new instance
 └─────────────────────────────────────┘
          ↕ TCP
    Qt6 GUI Client (your desktop)

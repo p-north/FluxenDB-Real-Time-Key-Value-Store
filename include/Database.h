@@ -11,7 +11,25 @@ class Database{
         // get singleton instance of class
         static Database& getInstance();
 
-        // Persistance: Dump / oad the database from a file
+        // Common Commands
+        bool flushAll();
+
+        // TODO: Implement Key-value operations
+        void set(const std::string& key, const std::string& value);
+        bool get(const std::string& key, const std::string&value);
+        std::vector<std::string> keys();
+        std::string type(const std::string& key);
+        bool del(const std::string& key);
+        // expire
+        // rename
+
+        // TODO: Implement List operations
+
+
+        
+    
+
+        // DB Persistance: Dump / load the database from a file
         bool dump(const std::string& filename);
         bool load(const std::string& filename);
 
