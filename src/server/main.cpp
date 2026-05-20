@@ -1,5 +1,5 @@
-#include "../include/Server.h"
-#include "../include/Database.h"
+#include "../../include/Server.h"
+#include "../../include/Database.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]){
             if(!Database::getInstance().dump("dump.my_db"))
                 std::cerr << "Error dumping database\n";
             else    
-                std::cout  << "Database Dumped to dump.my_db\n";
+                std::cout  << "SERVER_MAIN: Database Dumped to dump.my_db\n";
 
         }
     });

@@ -1,4 +1,4 @@
-#include "../include/Database.h"
+#include "../../include/Database.h"
 
 #include <mutex>
 #include <fstream>
@@ -71,7 +71,7 @@ std::string Database::type(const std::string &key){
     if(hash_store.find(key) != hash_store.end()){
         return "hash";
     }
-    else return "none"
+    else return "none";
 
 }
 bool Database::del(const std::string &key){
@@ -87,7 +87,9 @@ bool Database::expire(const std::string &key, const std::string &seconds){
     
 }
 // rename
-bool Database::rename(const std::string &oldKey, const std::string &newKey);
+bool Database::rename(const std::string &oldKey, const std::string &newKey){
+    
+}
 
 // -----------------------Database load/dump implmentation
 
@@ -189,4 +191,9 @@ bool Database::load(const std::string &filename)
             hash_store[key] = hash;
         }
     }
+
 }
+
+
+
+

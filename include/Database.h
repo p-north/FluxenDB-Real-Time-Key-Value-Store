@@ -1,5 +1,5 @@
 #ifndef DATABASE_H
-#define DATABSE_H
+#define DATABASE_H
 
 #include <string>
 #include <mutex>

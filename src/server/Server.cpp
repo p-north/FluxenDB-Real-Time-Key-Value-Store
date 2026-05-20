@@ -1,6 +1,6 @@
-#include "../include/Server.h"
-#include "../include/CommandHandler.h"
-#include "../include/Database.h"
+#include "../../include/Server.h"
+#include "../../include/CommandHandler.h"
+#include "../../include/Database.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -68,10 +68,13 @@ void Server::run(){
 
     while(running){
         int client_socket = accept(server_socket, nullptr, nullptr);
+        std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTeR: "<<client_socket<<"\n";
         if(client_socket < 0)
-            if(running)
+            if(running){
                 std::cerr << "Error accepting client connections\n";
-           break;
+                continue;
+            }
+        //    break;
         
         threads.emplace_back([client_socket, &cmdHandler](){
             char buffer[1024];
