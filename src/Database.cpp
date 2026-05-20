@@ -23,6 +23,74 @@ Database &Database::getInstance()
 
 */
 
+// TODO: Implement Key-value operations
+bool Database::flushAll()
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    kv_store.clear();
+    list_store.clear();
+    hash_store.clear();
+    return true;
+}
+void Database::set(const std::string &key, const std::string &value)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    kv_store[key] = value;
+
+}
+bool Database::get(const std::string &key, std::string &value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    auto it = kv_store.find(key);
+    if (it != kv_store.end()){
+        value = it->second;
+        return true;
+    }
+    return false;
+}
+std::vector<std::string> Database::keys(){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> keys;
+    for(const auto it: kv_store){
+        keys.push_back(it.first);
+    }
+    for(const auto it: list_store){
+        keys.push_back(it.first);
+    }for(const auto it: kv_store){
+        keys.push_back(it.first);
+    }
+    return keys;
+}
+std::string Database::type(const std::string &key){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if(kv_store.find(key) != kv_store.end()){
+        return "string";
+    }
+    if(list_store.find(key) != list_store.end()){
+        return "list";
+    }
+    if(hash_store.find(key) != hash_store.end()){
+        return "hash";
+    }
+    else return "none"
+
+}
+bool Database::del(const std::string &key){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    bool erased = false;
+    erased |= kv_store.erase(key) > 0;
+    erased |= list_store.erase(key) > 0;
+    erased |= hash_store.erase(key) > 0;
+    return false;
+}
+// expire
+bool Database::expire(const std::string &key, const std::string &seconds){
+    
+}
+// rename
+bool Database::rename(const std::string &oldKey, const std::string &newKey);
+
+// -----------------------Database load/dump implmentation
+
 bool Database::dump(const std::string &filename)
 {
     std::lock_guard<std::mutex> lock(db_mutex);
@@ -31,13 +99,13 @@ bool Database::dump(const std::string &filename)
         return false;
 
     // save in dump file
-    
-    // Key-value 
+
+    // Key-value
     for (const auto &kv : kv_store)
     {
         ofs << "K " << kv.first << " " << kv.second << "\n";
     }
-    // List 
+    // List
     for (const auto &kv : list_store)
     {
         ofs << "L " << kv.first;
@@ -47,22 +115,26 @@ bool Database::dump(const std::string &filename)
         }
         ofs << "\n";
     }
-    // Hash 
-    for (const auto& kv : hash_store){
+    // Hash
+    for (const auto &kv : hash_store)
+    {
         ofs << "H " << kv.first;
-        for(const auto& it : kv.second){
+        for (const auto &it : kv.second)
+        {
             ofs << " " << it.first << ":" << it.second;
         }
         ofs << "\n";
     }
 
-        return true;
+    return true;
 }
 
-bool Database::load(const std::string &filename){
+bool Database::load(const std::string &filename)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::ifstream ifs(filename, std::ios::binary);
-    if(!ifs) return false;
+    if (!ifs)
+        return false;
 
     // clear all data structures
     kv_store.clear();
@@ -71,47 +143,50 @@ bool Database::load(const std::string &filename){
 
     std::string line;
     // reading from db file
-    while(std::getline(ifs, line)){
+    while (std::getline(ifs, line))
+    {
         std::istringstream iss(line);
         char type;
         iss >> type;
-        if(type == 'K'){
+        if (type == 'K')
+        {
             std::string key, value;
             iss >> key >> value;
             // add to data structure
             kv_store[key] = value;
         }
-        else if(type == 'L'){
+        else if (type == 'L')
+        {
             // get the key
             std::string key;
             iss >> key;
             // get the value
             std::string item;
             std::vector<std::string> list;
-            while(iss >> item){
+            while (iss >> item)
+            {
                 list.push_back(item);
             }
             list_store[key] = list;
         }
-        else if(type == 'H'){
+        else if (type == 'H')
+        {
             std::string key;
             iss >> key;
             std::unordered_map<std::string, std::string> hash;
             std::string pair;
-            while(iss >> pair){
+            while (iss >> pair)
+            {
                 // split from colon
                 auto pos = pair.find(':');
-                if(pos != std::string::npos){
+                if (pos != std::string::npos)
+                {
                     std::string field = pair.substr(0, pos);
-                    std::string value = pair.substr(pos+1);
+                    std::string value = pair.substr(pos + 1);
                     hash[field] = value;
                 }
-
             }
             hash_store[key] = hash;
-
         }
-
     }
-
 }
