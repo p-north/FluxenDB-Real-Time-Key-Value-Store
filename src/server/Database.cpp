@@ -1,4 +1,4 @@
-#include "../include/Database.h"
+#include "../../include/Database.h"
 
 #include <mutex>
 #include <fstream>
@@ -114,4 +114,34 @@ bool Database::load(const std::string &filename){
 
     }
 
+}
+bool Database::flushAll() {
+    return true;
+}
+
+void Database::set(const std::string& key, const std::string& value) {
+}
+
+bool Database::get(const std::string& key, const std::string& value) {
+    return true;
+}
+
+std::vector<std::string> Database::keys() {
+    return {};
+}
+
+std::string Database::type(const std::string& key) {
+    return "";
+}
+
+bool Database::del(const std::string& key) {
+    return true;
+}
+
+bool Database::expire(const std::string& key, const std::string& seconds) {
+    return true;
+}
+
+bool Database::rename(const std::string& oldKey, const std::string& newKey) {
+    return true;
 }

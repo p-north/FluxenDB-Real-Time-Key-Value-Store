@@ -5,7 +5,7 @@ using namespace std;
 class Client{
 public:
     Client(const string& host, int port);
-    ~Client()
+    ~Client();
     bool connectToServer();
     bool sendCommand(const string& cmd);
     string receiveResponse();

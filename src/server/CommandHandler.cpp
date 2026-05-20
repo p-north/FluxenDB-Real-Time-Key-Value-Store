@@ -1,5 +1,5 @@
-#include "../include/CommandHandler.h"
-#include "../include/Database.h"
+#include "../../include/CommandHandler.h"
+#include "../../include/Database.h"
 #include <string>
 #include <vector>
 #include <sstream>

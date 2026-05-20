@@ -1,5 +1,5 @@
-#include "../include/Server.h"
-#include "../include/Database.h"
+#include "../../include/Server.h"
+#include "../../include/Database.h"
 #include <iostream>
 #include <thread>
 #include <chrono>

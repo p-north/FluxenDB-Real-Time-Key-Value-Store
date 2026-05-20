@@ -1,6 +1,6 @@
-#include "../include/Server.h"
-#include "../include/CommandHandler.h"
-#include "../include/Database.h"
+#include "../../include/Server.h"
+#include "../../include/CommandHandler.h"
+#include "../../include/Database.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>

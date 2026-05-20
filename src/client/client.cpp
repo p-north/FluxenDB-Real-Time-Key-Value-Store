@@ -1,26 +1,28 @@
-#include "../../include/client.h"
+#include "../../include/Client.h"
 #include <sys/socket.h>
 #include <iostream>
-
+#include <netinet/in.h>
 #include <string>
-Clinet::Client(const string&host, int port):host_addr(host), port(port), sockfd(-1),connected(false){}
+#include <arpa/inet.h>
+#include <unistd.h>
+Client::Client(const string&host, int port):host_addr(host), port(port), sockfd(-1),is_connected(false){}
 Client::~Client(){
     closeConnection();
 }
 
 bool Client::connectToServer(){
-    sockfd = socket(AF_INET, SOCK_STREAM, 0)
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd==-1){
-        cerr<<"Socket creation failed\n"
+        cerr<<"Socket creation failed\n";
         return false;
     }
     sockaddr_in serverAddr{};
     serverAddr.sin_family=AF_INET;
-    serverAddr.sin_port = htons(port)
+    serverAddr.sin_port = htons(port);
 
     //converting host IPaddress from presentation(human readable) to network byte format
 
-    if(inet_pton(AF_INET, host.c_str(), &serverAddr.sin_addr)<=0){
+    if(inet_pton(AF_INET, host_addr.c_str(), &serverAddr.sin_addr)<=0){
         cerr<<"Invalid host IP address\n";
         return false;
     }
@@ -32,7 +34,7 @@ bool Client::connectToServer(){
     return true;
 }
 
-bool client::sendCommand(const string&cmd){
+bool Client::sendCommand(const string&cmd){
     string data = cmd+"\r\n";
     ssize_t bytes_sent= send(sockfd, data.c_str(), data.size(),0);
     return bytes_sent>0;
@@ -41,7 +43,10 @@ bool client::sendCommand(const string&cmd){
 string Client::receiveResponse(){
     char buffer[4096];
     memset(buffer, 0, sizeof(buffer));
-    ssize_t bytes_received = rec(sockfd, buffer, sizeof(buffer)-1, 0 )
+    ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer)-1, 0);
+     if (bytes_received <= 0) {
+        return "";
+    }
     return string(buffer, bytes_received);
 }
 
