@@ -148,7 +148,7 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
 }
 
 // -----------------------Database load/dump implmentation
-
+// dumps database -> iterates through all data structures, adds to datbase file
 bool Database::dump(const std::string &filename)
 {
     std::lock_guard<std::mutex> lock(db_mutex);
