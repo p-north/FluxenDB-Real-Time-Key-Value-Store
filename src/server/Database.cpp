@@ -3,6 +3,7 @@
 #include <mutex>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 // Singleton pattern -> returns db object instance
 Database &Database::getInstance()
@@ -36,59 +37,114 @@ void Database::set(const std::string &key, const std::string &value)
 {
     std::lock_guard<std::mutex> lock(db_mutex);
     kv_store[key] = value;
-
 }
-bool Database::get(const std::string &key, std::string &value){
+bool Database::get(const std::string &key, std::string &value)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     auto it = kv_store.find(key);
-    if (it != kv_store.end()){
+    if (it != kv_store.end())
+    {
         value = it->second;
         return true;
     }
     return false;
 }
-std::vector<std::string> Database::keys(){
+std::vector<std::string> Database::keys()
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> keys;
-    for(const auto it: kv_store){
+    for (const auto it : kv_store)
+    {
         keys.push_back(it.first);
     }
-    for(const auto it: list_store){
+    for (const auto it : list_store)
+    {
         keys.push_back(it.first);
-    }for(const auto it: kv_store){
+    }
+    for (const auto it : kv_store)
+    {
         keys.push_back(it.first);
     }
     return keys;
 }
-std::string Database::type(const std::string &key){
+std::string Database::type(const std::string &key)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
-    if(kv_store.find(key) != kv_store.end()){
+    if (kv_store.find(key) != kv_store.end())
+    {
         return "string";
     }
-    if(list_store.find(key) != list_store.end()){
+    if (list_store.find(key) != list_store.end())
+    {
         return "list";
     }
-    if(hash_store.find(key) != hash_store.end()){
+    if (hash_store.find(key) != hash_store.end())
+    {
         return "hash";
     }
-    else return "none";
-
+    else
+        return "none";
 }
-bool Database::del(const std::string &key){
+bool Database::del(const std::string &key)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     bool erased = false;
     erased |= kv_store.erase(key) > 0;
     erased |= list_store.erase(key) > 0;
     erased |= hash_store.erase(key) > 0;
-    return false;
+    return erased;
 }
 // expire
-bool Database::expire(const std::string &key, const std::string &seconds){
-    
+bool Database::expire(const std::string &key, const std::string &seconds)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    bool exist = (kv_store.find(key) != kv_store.end()) ||
+                 (list_store.find(key) != list_store.end()) ||
+                 (hash_store.find(key) != hash_store.end());
+    if (!exist)
+        return false;
+    expirey_map[key] = std::chrono::steady_clock::now() + std::chrono::seconds(std::stoll(seconds));
+    return true;
 }
 // rename
-bool Database::rename(const std::string &oldKey, const std::string &newKey){
-    
+bool Database::rename(const std::string &oldKey, const std::string &newKey)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    bool found = false;
+
+    auto itKv = kv_store.find(oldKey);
+    if (itKv != kv_store.end())
+    {
+        kv_store[newKey] = itKv->second;
+        kv_store.erase(itKv);
+        found = true;
+    }
+
+    auto itList = list_store.find(oldKey);
+    if (itList != list_store.end())
+    {
+        list_store[newKey] = itList->second;
+        list_store.erase(itList);
+        found = true;
+    }
+
+    auto itHash = hash_store.find(oldKey);
+    if (itHash != hash_store.end())
+    {
+        hash_store[newKey] = itHash->second;
+        hash_store.erase(itHash);
+        found = true;
+    }
+
+    auto itExpire = expirey_map.find(oldKey);
+    if (itExpire != expirey_map.end())
+    {
+        expirey_map[newKey] = itExpire->second;
+        expirey_map.erase(itExpire);
+        found = true;
+    }
+
+    return found;
 }
 
 // -----------------------Database load/dump implmentation
@@ -191,9 +247,4 @@ bool Database::load(const std::string &filename)
             hash_store[key] = hash;
         }
     }
-
 }
-
-
-
-
