@@ -4,4 +4,3 @@ build/
 *.d
 *.exe
 my_db_server
-client
