@@ -157,8 +157,10 @@ std::string commandHandler::processCommand(const std::string& commandLine){
             response << "-Error: EXPIRE requires key and time in seconds\r\n";
         }
         else{
-            db.expire(tokens[1], tokens[2]);
-            response << "+DK\r\n";
+            if(db.expire(tokens[1], tokens[2]))
+                response << "+OK\r\n";
+            else
+                response << "$-1\r\n";
 
         }
     }
@@ -168,7 +170,7 @@ std::string commandHandler::processCommand(const std::string& commandLine){
         }
         else{
             db.rename(tokens[1], tokens[2]);
-            response << "+DK\r\n";
+            response << "+OK\r\n";
 
         }
     }
