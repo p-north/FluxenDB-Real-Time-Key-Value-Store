@@ -175,6 +175,103 @@ std::string commandHandler::processCommand(const std::string& commandLine){
         }
     }
     // TODO: List operations
+    else if(cmd=="LSET"){
+        if(tokens.size()<3){
+            response<<"-Error: LSET requires key, position index and a value to set";
+        }else{
+            if(db.lset(tokens[0],std::stoi(tokens[1]),tokens[2])){
+                response<<"+OK\r\n";
+            }
+            else{
+                response<<"-Error: Index out of range\r\n";
+            }
+        }
+    }
+    else if(cmd=="LGET"){
+        if(tokens.size()<2){
+            response<<"-Error: LGET requires a list name (key)";
+        }else{
+            std::vector<std::string> list = db.lget(tokens[1]);
+            response << "*" << list.size() << "\r\n";
+            for(const auto& item : list){
+                response << "$" << item.size() << "\r\n" << item << "\r\n";
+            }
+            response<<"+OK\r\n";
+        }
+    }
+    else if(cmd=="LLEN"){
+        if(tokens.size()<2){
+            response<<"-Error: LLEN requires a list name (key)";
+        }else{
+            size_t length = db.llen(tokens[1]);
+            response << ":" << length << "\r\n";
+            response<<"+OK\r\n";
+        }
+    }
+    else if(cmd=="LPUSH"){
+        if(tokens.size()<3){
+            response<<"-Error: LSET requires key, and a value";
+        }else{    
+            db.lpush(tokens[0],std::vector<std::string>(tokens.begin()+1, tokens.end()));
+            response<<"+OK\r\n";
+        }
+    }
+    else if(cmd=="RPUSH"){
+        if(tokens.size()<3){
+            response<<"-Error: LSET requires key, and a value";
+        }else{    
+            db.rpush(tokens[0],std::vector<std::string>(tokens.begin()+1, tokens.end()));
+            response<<"+OK\r\n";
+        }
+    }
+    else if(cmd=="LPOP"){
+        if(tokens.size()<2){
+            response<<"-Error: LPOP requires the list name (key)";
+        }else{
+            std::string value = db.rpop(tokens[0]);
+            if(value.empty()){
+                response << "$-1\r\n";
+            }else{
+            response << "$" << value.size() << "\r\n" << value << "\r\n";
+            response<<"+OK\r\n";
+            }
+        }
+   }
+    else if(cmd=="RPOP"){
+        if(tokens.size()<2){
+            response<<"-Error: RPOP requires the list name (key)";
+        }else{
+            std::string value = db.rpop(tokens[0]);
+            if(value.empty()){
+                response << "$-1\r\n";
+            }else{
+                response << "$" << value.size() << "\r\n" << value << "\r\n";
+                response<<"+OK\r\n";
+            }
+        }
+    }
+    else if(cmd=="LREM"){
+        if(tokens.size()<3){
+            response<<"-Error: LSET requires key, count and a value to be removed.";
+        }else{
+            int count = db.lrem(tokens[0],std::stoi(tokens[1]),tokens[2]);
+            response<<":" << count << "\r\n";
+            response<<"+OK\r\n";
+        }
+    }
+    else if(cmd=="LINDEX"){
+        if(tokens.size()<3){
+            response<<"-Error: LSET requires key and an elemnent position";
+        }else{
+            std::string value = db.lindex(tokens[1],std::stoi(tokens[2]));
+            if(value.empty()){
+                response << "$-Error: Index out of range\r\n";
+            }else{
+                response << "$" << value.size() << "\r\n" << value << "\r\n";
+                response<<"+OK\r\n";
+            }
+        }
+    }
     // TODO: Hash operations
     else{
         response << "-Error: unknown command\r\n";

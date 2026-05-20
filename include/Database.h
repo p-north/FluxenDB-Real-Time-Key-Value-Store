@@ -27,7 +27,17 @@ class Database{
         bool rename(const std::string& oldKey, const std::string& newKey);
 
         // TODO: Implement List operations
+        bool lset(const std::string &key, const int&index, const std::string&value);
+        std::vector<std::string> lget(const std::string &key);
+        size_t llen(const std::string &key);
+        void lpush(const std::string &key, const std::vector<std::string>&values);
+        void rpush(const std::string &key, const std::vector<std::string>&values);
+        std::string lpop(const std::string &key);
+        std::string rpop(const std::string &key);
+        int lrem(const std::string &key, int count, const std::string&value);
+        std::string lindex(const std::string &key, const int&index);
 
+        
 
         
     

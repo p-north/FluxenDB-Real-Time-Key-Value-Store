@@ -147,6 +147,108 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
     return found;
 }
 
+//-----------LIST OPERATIONS---------------------
+
+ bool Database::lset(const std::string &key, const int&index, const std::string &value){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    if(index < 0 || index >= list.size()){
+        return false;
+    }
+    list[index]=value;
+    return true;
+    }
+
+    std::vector<std::string> Database::lget(const std::string &key){
+        std::lock_guard<std::mutex> lock(db_mutex);
+        return list_store[key];
+       
+    }
+
+    size_t Database::llen(const std::string &key){
+        std::lock_guard<std::mutex> lock(db_mutex);
+        return list_store[key].size();
+    }
+
+    void Database::lpush(const std::string &key, const std::vector<std::string>&values){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    list.insert(list.begin(), values.begin(), values.end());
+    }
+
+    void Database::rpush(const std::string &key, const std::vector<std::string>&values){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    list.insert(list.end(), values.begin(), values.end());
+    }
+
+    std::string Database::lpop(const std::string &key){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    
+    if(!list.empty()){
+        std::string value = list.front();
+        list.erase(list.begin());
+        return value;
+    }
+    return "";
+    }
+
+    std::string Database::rpop(const std::string &key)
+    {
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    if(!list.empty()){
+        std::string value = list.back();
+        list.pop_back();
+        return value;
+    }
+    return "";
+    }
+
+    int Database::lrem(const std::string &key,  int count, const std::string &value){
+        std::lock_guard<std::mutex> lock(db_mutex);
+        if(list_store.find(key) == list_store.end()){
+            return 0;
+        }
+        std::vector<std::string> &list = list_store[key];
+        int removed = 0;
+        if(count==0){
+            int actualSize = list.size();
+            list.erase(std::remove(list.begin(), list.end(), value), list.end());
+            removed = actualSize - list.size();
+        }else if(count>0){
+            for(auto it = list.begin(); it != list.end()&& count>0;){
+                if(*it == value){
+                    it = list.erase(it);
+                    count--;
+                    removed++;
+                }else{
+                    it++;
+                }
+            }
+        }else if(count<0){
+            count = -count;
+            for(int i=list.size()-1; i>=0 && count>0; i--){
+                if(list[i]==value){
+                    list.erase(list.begin()+i);
+                    count--;
+                    removed++;
+                }
+            }
+        }
+        return removed;
+    }
+
+    std::string Database::lindex(const std::string &key, const int &index){
+        std::lock_guard<std::mutex> lock(db_mutex);
+        std::vector<std::string> &list = list_store[key];
+        if(index < 0 || index >= list.size()){
+            return "";
+        }
+        return list[index];
+    }
+
 // -----------------------Database load/dump implmentation
 // dumps database -> iterates through all data structures, adds to datbase file
 bool Database::dump(const std::string &filename)
@@ -203,6 +305,7 @@ bool Database::load(const std::string &filename)
     // reading from db file
     while (std::getline(ifs, line))
     {
+        //line->K key value
         std::istringstream iss(line);
         char type;
         iss >> type;
@@ -215,6 +318,7 @@ bool Database::load(const std::string &filename)
         }
         else if (type == 'L')
         {
+            //line->L key value1 value2 value3
             // get the key
             std::string key;
             iss >> key;
@@ -229,6 +333,7 @@ bool Database::load(const std::string &filename)
         }
         else if (type == 'H')
         {
+            //line->H key field1:value1 field2:value2 field3:value3
             std::string key;
             iss >> key;
             std::unordered_map<std::string, std::string> hash;
