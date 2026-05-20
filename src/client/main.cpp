@@ -8,6 +8,6 @@ int main(){
     if(!client.connectToServer()){
         return -1;
     }
-    client.sendCommand("*1/r/n$4/r/nPING/r/n");
+    client.sendCommand("*1\r\n$4\r\nPING\r\n");
     cout<<client.receiveResponse()<<"\n";
 }

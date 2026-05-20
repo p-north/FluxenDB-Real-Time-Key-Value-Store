@@ -45,7 +45,7 @@ string Client::receiveResponse(){
     memset(buffer, 0, sizeof(buffer));
     ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer)-1, 0);
      if (bytes_received <= 0) {
-        return "";
+        return "there is an error reading the response from the server";
     }
     return string(buffer, bytes_received);
 }
