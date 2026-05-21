@@ -55,17 +55,17 @@ string Client::parseResponse(string& response){
         return response.substr(1, response.find(CRLF)-1);
     }
     // Error
-    if (type == '-') {
+    else if (type == '-') {
         return "ERROR: " + response.substr(1, response.find("\r\n") - 1);
     }
 
     // Integer
-    if (type == ':') {
+    else if (type == ':') {
         return response.substr(1, response.find("\r\n") - 1);
     }
 
     // Bulk String ($)
-    if (type == '$') {
+    else if (type == '$') {
         size_t pos = response.find("\r\n");
         int len = stoi(response.substr(1, pos - 1));
 
@@ -73,8 +73,42 @@ string Client::parseResponse(string& response){
 
         return response.substr(pos + 2, len);
     }
-}
+    //array
+    else if(type=='*'){
+        //*1\r\n$6\r\nbottle\r\n
+        size_t i = 0;
 
+        // --- Parse array header ---
+        size_t end = response.find("\r\n", i);
+        int numElements = std::stoi(response.substr(i + 1, end - i - 1));
+        i = end + 2;
+    
+        std::string result;
+    
+        for (int k = 0; k < numElements; k++) {
+    
+            // --- Parse bulk string header ($len) ---
+            end = response.find("\r\n", i);
+            int len = std::stoi(response.substr(i + 1, end - i - 1));
+            i = end + 2;
+    
+            if (len == -1){
+                result+="NULL ";
+                continue;
+            }
+            // --- Extract string ---
+            result += response.substr(i, len)+" ";
+            i += len + 2; // skip \r\n
+        }
+    
+        return result;
+    }
+    else{
+        //THIS SHOULD NOT BE EXECUTED
+        return response;
+    }
+}
+//$
 bool Client::sendCommand(const string&cmd){
     string data = cmd+"\r\n";
     ssize_t bytes_sent= send(sockfd, data.c_str(), data.size(),0);

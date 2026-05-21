@@ -179,7 +179,7 @@ std::string commandHandler::processCommand(const std::string& commandLine){
         if(tokens.size()<3){
             response<<"-Error: LSET requires key, position index and a value to set";
         }else{
-            if(db.lset(tokens[0],std::stoi(tokens[1]),tokens[2])){
+            if(db.lset(tokens[1],std::stoi(tokens[2]),tokens[3])){
                 response<<"+OK\r\n";
             }
             else{
@@ -196,7 +196,6 @@ std::string commandHandler::processCommand(const std::string& commandLine){
             for(const auto& item : list){
                 response << "$" << item.size() << "\r\n" << item << "\r\n";
             }
-            response<<"+OK\r\n";
         }
     }
     else if(cmd=="LLEN"){
@@ -205,35 +204,33 @@ std::string commandHandler::processCommand(const std::string& commandLine){
         }else{
             size_t length = db.llen(tokens[1]);
             response << ":" << length << "\r\n";
-            response<<"+OK\r\n";
         }
     }
     else if(cmd=="LPUSH"){
         if(tokens.size()<3){
-            response<<"-Error: LSET requires key, and a value";
+            response<<"-Error: LPUSH requires key, and a value";
         }else{    
-            db.lpush(tokens[0],std::vector<std::string>(tokens.begin()+1, tokens.end()));
-            response<<"+OK\r\n";
+            int size=db.lpush(tokens[1],std::vector<std::string>(tokens.begin()+2, tokens.end()));
+            response<<":"<<std::to_string(size)<<"\r\n";
         }
     }
     else if(cmd=="RPUSH"){
         if(tokens.size()<3){
-            response<<"-Error: LSET requires key, and a value";
+            response<<"-Error: RPUSH requires key, and a value";
         }else{    
-            db.rpush(tokens[0],std::vector<std::string>(tokens.begin()+1, tokens.end()));
-            response<<"+OK\r\n";
+            int size = db.rpush(tokens[1],std::vector<std::string>(tokens.begin()+2, tokens.end()));
+            response<<":"<<std::to_string(size)<<"\r\n";
         }
     }
     else if(cmd=="LPOP"){
         if(tokens.size()<2){
             response<<"-Error: LPOP requires the list name (key)";
         }else{
-            std::string value = db.rpop(tokens[0]);
+            std::string value = db.lpop(tokens[1]);
             if(value.empty()){
                 response << "$-1\r\n";
             }else{
             response << "$" << value.size() << "\r\n" << value << "\r\n";
-            response<<"+OK\r\n";
             }
         }
    }
@@ -241,34 +238,31 @@ std::string commandHandler::processCommand(const std::string& commandLine){
         if(tokens.size()<2){
             response<<"-Error: RPOP requires the list name (key)";
         }else{
-            std::string value = db.rpop(tokens[0]);
+            std::string value = db.rpop(tokens[1]);
             if(value.empty()){
                 response << "$-1\r\n";
             }else{
                 response << "$" << value.size() << "\r\n" << value << "\r\n";
-                response<<"+OK\r\n";
             }
         }
     }
     else if(cmd=="LREM"){
         if(tokens.size()<3){
-            response<<"-Error: LSET requires key, count and a value to be removed.";
+            response<<"-Error: LREM requires key, count and a value to be removed.";
         }else{
-            int count = db.lrem(tokens[0],std::stoi(tokens[1]),tokens[2]);
+            int count = db.lrem(tokens[1],std::stoi(tokens[2]),tokens[3]);
             response<<":" << count << "\r\n";
-            response<<"+OK\r\n";
         }
     }
     else if(cmd=="LINDEX"){
         if(tokens.size()<3){
-            response<<"-Error: LSET requires key and an elemnent position";
+            response<<"-Error: LINDEX requires key and an elemnent position";
         }else{
             std::string value = db.lindex(tokens[1],std::stoi(tokens[2]));
             if(value.empty()){
                 response << "$-Error: Index out of range\r\n";
             }else{
                 response << "$" << value.size() << "\r\n" << value << "\r\n";
-                response<<"+OK\r\n";
             }
         }
     }
