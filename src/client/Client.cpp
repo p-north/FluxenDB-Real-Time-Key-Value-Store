@@ -33,6 +33,47 @@ bool Client::connectToServer(){
     is_connected=true;
     return true;
 }
+string Client::parseSendCommand(vector<string>&tokens){
+    string command;
+    string CRLF = "\r\n";
+    command+= "*"+to_string(tokens.size())+CRLF;
+    for(string& token: tokens){
+        command+="$"+to_string(token.size())+CRLF;
+        command+=token+CRLF;
+    }
+    //cout<<"COMMAND IS: "+command+"\n";
+    return command;
+}
+string Client::parseResponse(string& response){
+    string CRLF="\r\n";
+    if(response.empty()){
+        return "NO RESPONSE: CHECK SERVER SINCE SERVER SENDS RESPONSE FOR EVERY REQUEST\n";
+    }
+    char type = response[0];
+    // Simple String
+    if(type=='+'){
+        return response.substr(1, response.find(CRLF)-1);
+    }
+    // Error
+    if (type == '-') {
+        return "ERROR: " + response.substr(1, response.find("\r\n") - 1);
+    }
+
+    // Integer
+    if (type == ':') {
+        return response.substr(1, response.find("\r\n") - 1);
+    }
+
+    // Bulk String ($)
+    if (type == '$') {
+        size_t pos = response.find("\r\n");
+        int len = stoi(response.substr(1, pos - 1));
+
+        if (len == -1) return "NULL";
+
+        return response.substr(pos + 2, len);
+    }
+}
 
 bool Client::sendCommand(const string&cmd){
     string data = cmd+"\r\n";
