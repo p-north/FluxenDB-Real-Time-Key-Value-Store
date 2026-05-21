@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/tests.dir/tests/test_lists.cpp.o CMakeFiles/tests.dir/src/server/CommandHandler.cpp.o CMakeFiles/tests.dir/src/server/Database.cpp.o CMakeFiles/tests.dir/src/server/Server.cpp.o CMakeFiles/tests.dir/src/server/main.cpp.o -o tests  lib/libgtest.a lib/libgtest_main.a lib/libgtest.a

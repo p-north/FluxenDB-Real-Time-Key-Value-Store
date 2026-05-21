@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/client.dir/src/client/Client.cpp.o CMakeFiles/client.dir/src/client/main.cpp.o -o client

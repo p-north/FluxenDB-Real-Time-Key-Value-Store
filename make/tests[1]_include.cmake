@@ -1,0 +1,5 @@
+if(EXISTS "/Users/shan/Desktop/FluxenDB-Real-Time-Key-Value-Store/make/tests[1]_tests.cmake")
+  include("/Users/shan/Desktop/FluxenDB-Real-Time-Key-Value-Store/make/tests[1]_tests.cmake")
+else()
+  add_test(tests_NOT_BUILT tests_NOT_BUILT)
+endif()
