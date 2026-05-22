@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/server.dir/src/server/CommandHandler.cpp.o CMakeFiles/server.dir/src/server/Database.cpp.o CMakeFiles/server.dir/src/server/Server.cpp.o CMakeFiles/server.dir/src/server/main.cpp.o -o server
