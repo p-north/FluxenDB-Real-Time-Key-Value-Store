@@ -5,6 +5,7 @@
 #include <string>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <cstring>
 Client::Client(const string&host, int port):host_addr(host), port(port), sockfd(-1),is_connected(false){}
 Client::~Client(){
     closeConnection();
