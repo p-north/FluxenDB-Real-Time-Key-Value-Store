@@ -173,14 +173,19 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
     int Database::lpush(const std::string &key, const std::vector<std::string>&values){
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    list.insert(list.begin(), values.begin(), values.end());
+    for(const std::string &value:values){
+        list.insert(list.begin(), value);
+    }
+    
     return list.size();
     }
 
     int Database::rpush(const std::string &key, const std::vector<std::string>&values){
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    list.insert(list.end(), values.begin(), values.end());
+    for(const std::string&value:values){
+        list.insert(list.end(), value);
+    }
     return list.size();
     }
 
