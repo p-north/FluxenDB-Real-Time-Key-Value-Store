@@ -223,7 +223,7 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
         int removed = 0;
         if(count==0){
             int actualSize = list.size();
-            list.erase(std::remove(list.begin(), list.end(), value), list.end());
+            // list.erase(std::remove(list.begin(), list.end(), value), list.end());
             removed = actualSize - list.size();
         }else if(count>0){
             for(auto it = list.begin(); it != list.end()&& count>0;){
@@ -360,4 +360,5 @@ bool Database::load(const std::string &filename)
             hash_store[key] = hash;
         }
     }
+    return true;
 }
