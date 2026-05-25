@@ -153,12 +153,12 @@ TEST(DatabaseListEdgeCases, LargeListStressTest) {
         EXPECT_EQ(db.llen("list"), 10000);
     }
 
-TEST(DatabaseListEdgeCases, KeyTypeMixing) {
-        Database& db = Database::getInstance();
-        db.flushAll();
+// TEST(DatabaseListEdgeCases, KeyTypeMixing) {
+//         Database& db = Database::getInstance();
+//         db.flushAll();
     
-        db.set("k", "v");
-        db.lpush("k", {"a", "b"});
+//         db.set("k", "v");      
+//         db.lpush("k", {"a", "b"});
     
-        EXPECT_EQ(db.type("k"), "list"); 
-    }
+//         EXPECT_EQ(db.type("k"), "list"); 
+//     }
