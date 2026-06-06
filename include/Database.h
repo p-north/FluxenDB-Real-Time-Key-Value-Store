@@ -37,6 +37,21 @@ class Database{
         int lrem(const std::string &key, int count, const std::string&value);
         std::string lindex(const std::string &key, const int&index);
 
+        // TODO: Implement Hash-based operations
+        void hset(const std::string& key, const std::string &field, const std::string &value);
+        // gets the value of a field
+        bool hget(const std::string& key, const std::string &field, std::string &value);
+        // check whether a field exists
+        bool hexists(const std::string& key, const std::string &field);
+        // deletes a field
+        bool hdel(const std::string &key, const std::string &field);
+        // returns number of field in the hash
+        
+
+
+
+        
+
         
 
         
