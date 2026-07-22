@@ -257,6 +257,59 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
         return list[index];
     }
 
+
+//-----------Hash OPERATIONS---------------------
+int Database::hset(const std::string& key, const std::string &field, const std::string &value){
+    
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unordered_map<std::string, std::string> &hash = hash_store[key];
+    if(hash.find(field) == hash.end()){
+        hash[field] = value;
+        return 1; // new field added
+    }
+    hash[field] = value;
+    return 0; // field updated
+}
+
+std::string Database::hget(const std::string& key, const std::string &field, std::string &value){
+    
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if(hash_store.find(key) == hash_store.end()){
+        return "";
+    }
+    std::unordered_map<std::string, std::string> &hash = hash_store[key];
+    if(hash.find(field) == hash.end()){
+        return "";
+    }
+    value = hash[field];
+    return value;
+}
+
+bool Database::hexists(const std::string& key, const std::string &field){
+    
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if(hash_store.find(key) == hash_store.end()){
+        return false;
+    }
+    std::unordered_map<std::string, std::string> &hash = hash_store[key];
+    return hash.find(field) != hash.end();
+}
+
+bool Database::hdel(const std::string &key, const std::string &field){
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if(hash_store.find(key) == hash_store.end()){
+        return false;
+    }
+    std::unordered_map<std::string, std::string> &hash = hash_store[key];
+    return hash.erase(field) > 0;
+}
+
+
+
+
+
+
+
 // -----------------------Database load/dump implmentation
 // dumps database -> iterates through all data structures, adds to datbase file
 bool Database::dump(const std::string &filename)

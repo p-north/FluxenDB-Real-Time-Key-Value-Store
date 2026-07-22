@@ -266,9 +266,48 @@ std::string commandHandler::processCommand(const std::string& commandLine){
             }
         }
     }
-    // TODO: Hash operations
+
+    // ----------------------TODO: Hash operations--------------------------
+    else if(cmd=="HSET"){
+        if(tokens.size()<4){
+            response<<"-Error: HSET requires key, field and value";
+        }else{
+            int result = db.hset(tokens[1],tokens[2],tokens[3]);
+            response<<":"<<result<<"\r\n";
+        }
+    }
+    else if(cmd=="HGET"){
+        if(tokens.size()<3){
+            response<<"-Error: HGET requires key and field";
+        }else{
+            std::string value;
+            std::string result = db.hget(tokens[1],tokens[2],value);
+            if(result.empty()){
+                response << "$-1\r\n"; //null bulk string
+            }else{
+                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            }
+        }
+    }
+    else if(cmd=="HEXISTS"){
+        if(tokens.size()<3){
+            response<<"-Error: HEXISTS requires key and field";
+        }else{
+            bool exists = db.hexists(tokens[1],tokens[2]);
+            response<<":"<<(exists?1:0)<<"\r\n";
+        }
+    }
+    else if(cmd=="HDEL"){
+        if(tokens.size()<3){
+            response<<"-Error: HDEL requires key and field";
+        }else{
+            bool deleted = db.hdel(tokens[1],tokens[2]);
+            response<<":"<<(deleted?1:0)<<"\r\n";
+        }
+    }
     else{
-        response << "-Error: unknown command\r\n";
+        response << "-Error: Unknown command '" << cmd << "'\r\n";
+        
     }
 
     return response.str();
