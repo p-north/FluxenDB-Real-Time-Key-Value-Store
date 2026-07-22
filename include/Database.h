@@ -46,7 +46,15 @@ class Database{
         // deletes a field
         bool hdel(const std::string &key, const std::string &field);
         // returns number of field in the hash
-        
+        bool hlen(const std::string &key);
+        // returns all field names
+        std::vector<std::string> hkeys(const std::string &key);
+        // returns all values
+        std::vector<std::string> hvals(const std::string &key);
+        // returns every field and its value
+        std::unordered_map<const std::string, const std::string> hgetall(const std::string &key);
+        // set multiple fields with values
+        bool hmset(const std::string &key, const std::unordered_map<const std::string, const std::string> args);
 
 
 
