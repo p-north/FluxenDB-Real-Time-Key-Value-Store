@@ -38,9 +38,9 @@ class Database{
         std::string lindex(const std::string &key, const int&index);
 
         // TODO: Implement Hash-based operations
-        void hset(const std::string& key, const std::string &field, const std::string &value);
+        int hset(const std::string& key, const std::string &field, const std::string &value);
         // gets the value of a field
-        bool hget(const std::string& key, const std::string &field, std::string &value);
+        std::string hget(const std::string& key, const std::string &field, std::string &value);
         // check whether a field exists
         bool hexists(const std::string& key, const std::string &field);
         // deletes a field
