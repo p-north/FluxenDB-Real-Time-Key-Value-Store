@@ -150,120 +150,146 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
 
 //-----------LIST OPERATIONS---------------------
 
- bool Database::lset(const std::string &key, const int&index, const std::string &value){
+bool Database::lset(const std::string &key, const int &index, const std::string &value)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    if(index < 0 || index >= list.size()){
+    if (index < 0 || index >= list.size())
+    {
         return false;
     }
-    list[index]=value;
+    list[index] = value;
     return true;
-    }
+}
 
-    std::vector<std::string> Database::lget(const std::string &key){
-        std::lock_guard<std::mutex> lock(db_mutex);
-        return list_store[key];
-       
-    }
+std::vector<std::string> Database::lget(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    return list_store[key];
+}
 
-    size_t Database::llen(const std::string &key){
-        std::lock_guard<std::mutex> lock(db_mutex);
-        return list_store[key].size();
-    }
+size_t Database::llen(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    return list_store[key].size();
+}
 
-    int Database::lpush(const std::string &key, const std::vector<std::string>&values){
+int Database::lpush(const std::string &key, const std::vector<std::string> &values)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    for(const std::string &value:values){
+    for (const std::string &value : values)
+    {
         list.insert(list.begin(), value);
     }
-    
-    return list.size();
-    }
 
-    int Database::rpush(const std::string &key, const std::vector<std::string>&values){
+    return list.size();
+}
+
+int Database::rpush(const std::string &key, const std::vector<std::string> &values)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    for(const std::string&value:values){
+    for (const std::string &value : values)
+    {
         list.insert(list.end(), value);
     }
     return list.size();
-    }
+}
 
-    std::string Database::lpop(const std::string &key){
+std::string Database::lpop(const std::string &key)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    
-    if(!list.empty()){
+
+    if (!list.empty())
+    {
         std::string value = list.front();
         list.erase(list.begin());
         return value;
     }
     return "";
-    }
+}
 
-    std::string Database::rpop(const std::string &key)
-    {
+std::string Database::rpop(const std::string &key)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
-    if(!list.empty()){
+    if (!list.empty())
+    {
         std::string value = list.back();
         list.pop_back();
         return value;
     }
     return "";
-    }
+}
 
-    int Database::lrem(const std::string &key,  int count, const std::string &value){
-        std::lock_guard<std::mutex> lock(db_mutex);
-        if(list_store.find(key) == list_store.end()){
-            return 0;
-        }
-        std::vector<std::string> &list = list_store[key];
-        int removed = 0;
-        if(count==0){
-            int actualSize = list.size();
-            // list.erase(std::remove(list.begin(), list.end(), value), list.end());
-            removed = actualSize - list.size();
-        }else if(count>0){
-            for(auto it = list.begin(); it != list.end()&& count>0;){
-                if(*it == value){
-                    it = list.erase(it);
-                    count--;
-                    removed++;
-                }else{
-                    it++;
-                }
+int Database::lrem(const std::string &key, int count, const std::string &value)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    if (list_store.find(key) == list_store.end())
+    {
+        return 0;
+    }
+    std::vector<std::string> &list = list_store[key];
+    int removed = 0;
+    if (count == 0)
+    {
+        int actualSize = list.size();
+        // list.erase(std::remove(list.begin(), list.end(), value), list.end());
+        removed = actualSize - list.size();
+    }
+    else if (count > 0)
+    {
+        for (auto it = list.begin(); it != list.end() && count > 0;)
+        {
+            if (*it == value)
+            {
+                it = list.erase(it);
+                count--;
+                removed++;
             }
-        }else if(count<0){
-            count = -count;
-            for(int i=list.size()-1; i>=0 && count>0; i--){
-                if(list[i]==value){
-                    list.erase(list.begin()+i);
-                    count--;
-                    removed++;
-                }
+            else
+            {
+                it++;
             }
         }
-        return removed;
     }
-
-    std::string Database::lindex(const std::string &key, const int &index){
-        std::lock_guard<std::mutex> lock(db_mutex);
-        std::vector<std::string> &list = list_store[key];
-        if(index < 0 || index >= list.size()){
-            return "";
+    else if (count < 0)
+    {
+        count = -count;
+        for (int i = list.size() - 1; i >= 0 && count > 0; i--)
+        {
+            if (list[i] == value)
+            {
+                list.erase(list.begin() + i);
+                count--;
+                removed++;
+            }
         }
-        return list[index];
     }
+    return removed;
+}
 
+std::string Database::lindex(const std::string &key, const int &index)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> &list = list_store[key];
+    if (index < 0 || index >= list.size())
+    {
+        return "";
+    }
+    return list[index];
+}
 
 //-----------Hash OPERATIONS---------------------
-int Database::hset(const std::string& key, const std::string &field, const std::string &value){
-    
+bool Database::hset(const std::string &key, const std::string &field, const std::string &value)
+{
+
     std::lock_guard<std::mutex> lock(db_mutex);
     std::unordered_map<std::string, std::string> &hash = hash_store[key];
-    if(hash.find(field) == hash.end()){
+    if (hash.find(field) == hash.end())
+    {
         hash[field] = value;
         return 1; // new field added
     }
@@ -271,44 +297,84 @@ int Database::hset(const std::string& key, const std::string &field, const std::
     return 0; // field updated
 }
 
-std::string Database::hget(const std::string& key, const std::string &field, std::string &value){
-    
+std::string Database::hget(const std::string &key, const std::string &field, std::string &value)
+{
+
     std::lock_guard<std::mutex> lock(db_mutex);
-    if(hash_store.find(key) == hash_store.end()){
+    if (hash_store.find(key) == hash_store.end())
+    {
         return "";
     }
     std::unordered_map<std::string, std::string> &hash = hash_store[key];
-    if(hash.find(field) == hash.end()){
+    if (hash.find(field) == hash.end())
+    {
         return "";
     }
     value = hash[field];
     return value;
 }
 
-bool Database::hexists(const std::string& key, const std::string &field){
-    
+bool Database::hexists(const std::string &key, const std::string &field)
+{
+
     std::lock_guard<std::mutex> lock(db_mutex);
-    if(hash_store.find(key) == hash_store.end()){
+    if (hash_store.find(key) == hash_store.end())
+    {
         return false;
     }
     std::unordered_map<std::string, std::string> &hash = hash_store[key];
     return hash.find(field) != hash.end();
 }
 
-bool Database::hdel(const std::string &key, const std::string &field){
+bool Database::hdel(const std::string &key, const std::string &field)
+{
     std::lock_guard<std::mutex> lock(db_mutex);
-    if(hash_store.find(key) == hash_store.end()){
+    if (hash_store.find(key) == hash_store.end())
+    {
         return false;
     }
     std::unordered_map<std::string, std::string> &hash = hash_store[key];
     return hash.erase(field) > 0;
 }
 
+size_t Database::hlen(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    return hash_store[key].size();
+}
 
+std::vector<std::string> Database::hkeys(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> result;
+    for (const auto [field, value] : hash_store[key])
+    {
+        result.push_back(field);
+    }
+    return result;
+}
 
+std::vector<std::string> Database::hvals(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::vector<std::string> result;
+    for (const auto [field, value] : hash_store[key])
+    {
+        result.push_back(value);
+    }
+    return result;
+}
 
-
-
+std::unordered_map<std::string, std::string> Database::hgetall(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unordered_map<std::string, std::string> allMap;
+    for (const auto [field, value] : hash_store[key])
+    {
+        allMap[field] = value;
+    }
+    return allMap;
+}
 
 // -----------------------Database load/dump implmentation
 // dumps database -> iterates through all data structures, adds to datbase file
@@ -366,7 +432,7 @@ bool Database::load(const std::string &filename)
     // reading from db file
     while (std::getline(ifs, line))
     {
-        //line->K key value
+        // line->K key value
         std::istringstream iss(line);
         char type;
         iss >> type;
@@ -379,8 +445,8 @@ bool Database::load(const std::string &filename)
         }
         else if (type == 'L')
         {
-            //line->L key value1 value2 value3
-            // get the key
+            // line->L key value1 value2 value3
+            //  get the key
             std::string key;
             iss >> key;
             // get the value
@@ -394,7 +460,7 @@ bool Database::load(const std::string &filename)
         }
         else if (type == 'H')
         {
-            //line->H key field1:value1 field2:value2 field3:value3
+            // line->H key field1:value1 field2:value2 field3:value3
             std::string key;
             iss >> key;
             std::unordered_map<std::string, std::string> hash;

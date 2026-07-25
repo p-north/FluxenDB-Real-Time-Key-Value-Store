@@ -7,84 +7,74 @@
 #include <vector>
 #include <chrono>
 
-class Database{
-    public:
-        // get singleton instance of class
-        static Database& getInstance();
+class Database
+{
+public:
+    // get singleton instance of class
+    static Database &getInstance();
 
-        // Common Commands
-        bool flushAll();
+    // Common Commands
+    bool flushAll();
 
-        // TODO: Implement Key-value operations
-        void set(const std::string& key, const std::string& value);
-        bool get(const std::string& key, std::string&value);
-        std::vector<std::string> keys();
-        std::string type(const std::string& key);
-        bool del(const std::string& key);
-        // expire
-        bool  expire(const std::string& key, const std::string& seconds);
-        // rename
-        bool rename(const std::string& oldKey, const std::string& newKey);
+    // Key-value operations
+    void set(const std::string &key, const std::string &value);
+    bool get(const std::string &key, std::string &value);
+    std::vector<std::string> keys();
+    std::string type(const std::string &key);
+    bool del(const std::string &key);
+    // expire
+    bool expire(const std::string &key, const std::string &seconds);
+    // rename
+    bool rename(const std::string &oldKey, const std::string &newKey);
 
-        // TODO: Implement List operations
-        bool lset(const std::string &key, const int&index, const std::string&value);
-        std::vector<std::string> lget(const std::string &key);
-        size_t llen(const std::string &key);
-        int lpush(const std::string &key, const std::vector<std::string>&values);
-        int rpush(const std::string &key, const std::vector<std::string>&values);
-        std::string lpop(const std::string &key);
-        std::string rpop(const std::string &key);
-        int lrem(const std::string &key, int count, const std::string&value);
-        std::string lindex(const std::string &key, const int&index);
+    // List operations
+    bool lset(const std::string &key, const int &index, const std::string &value);
+    std::vector<std::string> lget(const std::string &key);
+    size_t llen(const std::string &key);
+    int lpush(const std::string &key, const std::vector<std::string> &values);
+    int rpush(const std::string &key, const std::vector<std::string> &values);
+    std::string lpop(const std::string &key);
+    std::string rpop(const std::string &key);
+    int lrem(const std::string &key, int count, const std::string &value);
+    std::string lindex(const std::string &key, const int &index);
 
-        // TODO: Implement Hash-based operations
-        int hset(const std::string& key, const std::string &field, const std::string &value);
-        // gets the value of a field
-        std::string hget(const std::string& key, const std::string &field, std::string &value);
-        // check whether a field exists
-        bool hexists(const std::string& key, const std::string &field);
-        // deletes a field
-        bool hdel(const std::string &key, const std::string &field);
-        // returns number of field in the hash
-        bool hlen(const std::string &key);
-        // returns all field names
-        std::vector<std::string> hkeys(const std::string &key);
-        // returns all values
-        std::vector<std::string> hvals(const std::string &key);
-        // returns every field and its value
-        std::unordered_map<const std::string, const std::string> hgetall(const std::string &key);
-        // set multiple fields with values
-        bool hmset(const std::string &key, const std::unordered_map<const std::string, const std::string> args);
+    // Hash-based operations
+    bool hset(const std::string &key, const std::string &field, const std::string &value);
+    // gets the value of a field
+    std::string hget(const std::string &key, const std::string &field, std::string &value);
+    // check whether a field exists
+    bool hexists(const std::string &key, const std::string &field);
+    // deletes a field
+    bool hdel(const std::string &key, const std::string &field);
+    // returns number of field in the hash
+    size_t hlen(const std::string &key);
+    // returns all field names
+    std::vector<std::string> hkeys(const std::string &key);
+    // returns all values
+    std::vector<std::string> hvals(const std::string &key);
+    // returns every field and its value
+    std::unordered_map<std::string, std::string> hgetall(const std::string &key);
 
+    // DB Persistance: Dump / load the database from a file
+    bool dump(const std::string &filename);
+    bool load(const std::string &filename);
 
+private:
+    // constructors/destructors
+    Database() = default;
+    ~Database() = default;
+    Database(const Database &) = delete;
+    Database &operator=(const Database &) = delete;
+    std::mutex db_mutex;
 
-        
+    // --kv_store from string(key) -> string(value)--
+    std::unordered_map<std::string, std::string> kv_store;
+    // --list_store from string(key) -> list(value)--
+    std::unordered_map<std::string, std::vector<std::string>> list_store;
+    // --hash_store from string(key) -> map(value)--
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> hash_store;
 
-        
-
-        
-    
-
-        // DB Persistance: Dump / load the database from a file
-        bool dump(const std::string& filename);
-        bool load(const std::string& filename);
-
-    private:
-        // constructors/destructors
-        Database() = default;
-        ~Database() = default;
-        Database(const Database&) = delete;
-        Database& operator=(const Database&) = delete;
-        std::mutex db_mutex;
-
-        // kv_store from string(key) -> string(value)
-        std::unordered_map<std::string, std::string> kv_store;
-        // list_store from string(key) -> list(value)
-        std::unordered_map<std::string, std::vector<std::string>> list_store;
-        // hash_store from string(key) -> map(value)
-        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> hash_store;
-
-        std::unordered_map<std::string, std::chrono::steady_clock::time_point> expirey_map;
+    std::unordered_map<std::string, std::chrono::steady_clock::time_point> expirey_map;
 };
 
 #endif

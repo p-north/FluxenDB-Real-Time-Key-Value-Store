@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <unordered_map>
 
 // RESP parser:
 // *2\r\n\$4\r\n\PING\r\n\$4\r\n\TEST\r\n
@@ -61,253 +62,425 @@ std::vector<std::string> parseRespCommand(const std::string &input)
         std::string token = input.substr(pos, len);
         tokens.push_back(token);
         pos += len + 2; // sip token and CRLF
-
     }
     return tokens;
 }
 
-commandHandler::commandHandler(){}
+commandHandler::commandHandler() {}
 
-std::string commandHandler::processCommand(const std::string& commandLine){
+std::string commandHandler::processCommand(const std::string &commandLine)
+{
     // use RESP parser
     auto tokens = parseRespCommand(commandLine);
-    if(tokens.empty()) return "-Error: Empty command\r\n";
+    if (tokens.empty())
+        return "-Error: Empty command\r\n";
 
     // // DEBUGGIN ONLY
     // for(auto&t : tokens)  std::cout << t << "\n";
-      
-    
 
     // get the first command
     std::string cmd = tokens[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
     std::ostringstream response;
     // connnect to database
-    Database& db = Database::getInstance();
+    Database &db = Database::getInstance();
 
-
-    // check commands 
+    // check commands
     // common commands--------------------
-    if(cmd == "PING"){
+    if (cmd == "PING")
+    {
         response << "+PONG\r\n";
     }
-    else if(cmd == "ECHO"){
-        if(tokens.size() < 2){
+    else if (cmd == "ECHO")
+    {
+        if (tokens.size() < 2)
+        {
             response << "-Error: ECHO requires a messag\r\n";
         }
-        else{
+        else
+        {
             response << "+" << tokens[1] << "\r\n";
-
         }
-
     }
-    else if(cmd == "FLUSHALL"){
+    else if (cmd == "FLUSHALL")
+    {
         db.flushAll();
         response << "+OK\r\n";
     }
     // TODO: Key-value operations------------
-    else if (cmd == "SET"){
-        if(tokens.size() < 3){
+    else if (cmd == "SET")
+    {
+        if (tokens.size() < 3)
+        {
             response << "-Error: SET requires key and value\r\n";
         }
-        else{
+        else
+        {
             db.set(tokens[1], tokens[2]);
             response << "+OK\r\n";
         }
     }
-    else if (cmd == "GET"){
-         if(tokens.size() < 2){
+    else if (cmd == "GET")
+    {
+        if (tokens.size() < 2)
+        {
             response << "-Error: GET requires key\r\n";
         }
-        else{
+        else
+        {
             std::string value;
-            if(db.get(tokens[1], value))
-                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            if (db.get(tokens[1], value))
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
             else
                 response << "$-1\r\n";
         }
     }
-    else if (cmd == "KEYS"){
+    else if (cmd == "KEYS")
+    {
         std::vector<std::string> allKeys = db.keys();
         response << "*" << allKeys.size() << "\r\n";
-        for(const auto& key : allKeys){
-            response << "$" << key.size() << "\r\n" << key << "\r\n";
+        for (const auto &key : allKeys)
+        {
+            response << "$" << key.size() << "\r\n"
+                     << key << "\r\n";
         }
     }
-    else if (cmd == "TYPE"){
-        if(tokens.size() < 2){
+    else if (cmd == "TYPE")
+    {
+        if (tokens.size() < 2)
+        {
             response << "-Error: TYPE requires key\r\n";
         }
-        else{
+        else
+        {
             response << "+" << db.type(tokens[1]) << "\r\n";
         }
     }
-    else if (cmd == "DEL" || cmd == "UNLINK"){
-        if(tokens.size() < 2){
-            response << "-Error: " << cmd << "requires key" << 
-        "\r\n";
+    else if (cmd == "DEL" || cmd == "UNLINK")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: " << cmd << "requires key" << "\r\n";
         }
-        else{
+        else
+        {
             bool res = db.del(tokens[1]);
-            response << ":" << (res ? 1:0) << "\r\n";
+            response << ":" << (res ? 1 : 0) << "\r\n";
         }
     }
-    else if(cmd == "EXPIRE"){
-        if(tokens.size() < 3){
+    else if (cmd == "EXPIRE")
+    {
+        if (tokens.size() < 3)
+        {
             response << "-Error: EXPIRE requires key and time in seconds\r\n";
         }
-        else{
-            if(db.expire(tokens[1], tokens[2]))
+        else
+        {
+            if (db.expire(tokens[1], tokens[2]))
                 response << "+OK\r\n";
             else
                 response << "$-1\r\n";
-
         }
     }
-    else if (cmd == "RENAME"){
-        if(tokens.size() < 3){
+    else if (cmd == "RENAME")
+    {
+        if (tokens.size() < 3)
+        {
             response << "-Error: RENAME requires old key name and new key name\r\n";
         }
-        else{
+        else
+        {
             db.rename(tokens[1], tokens[2]);
             response << "+OK\r\n";
-
         }
     }
     // TODO: List operations
-    else if(cmd=="LSET"){
-        if(tokens.size()<3){
-            response<<"-Error: LSET requires key, position index and a value to set";
-        }else{
-            if(db.lset(tokens[1],std::stoi(tokens[2]),tokens[3])){
-                response<<"+OK\r\n";
+    else if (cmd == "LSET")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: LSET requires key, position index and a value to set";
+        }
+        else
+        {
+            if (db.lset(tokens[1], std::stoi(tokens[2]), tokens[3]))
+            {
+                response << "+OK\r\n";
             }
-            else{
-                response<<"-Error: Index out of range\r\n";
+            else
+            {
+                response << "-Error: Index out of range\r\n";
             }
         }
     }
-    else if(cmd=="LGET"){
-        if(tokens.size()<2){
-            response<<"-Error: LGET requires a list name (key)";
-        }else{
+    else if (cmd == "LGET")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: LGET requires a list name (key)";
+        }
+        else
+        {
             std::vector<std::string> list = db.lget(tokens[1]);
             response << "*" << list.size() << "\r\n";
-            for(const auto& item : list){
-                response << "$" << item.size() << "\r\n" << item << "\r\n";
+            for (const auto &item : list)
+            {
+                response << "$" << item.size() << "\r\n"
+                         << item << "\r\n";
             }
         }
     }
-    else if(cmd=="LLEN"){
-        if(tokens.size()<2){
-            response<<"-Error: LLEN requires a list name (key)";
-        }else{
+    else if (cmd == "LLEN")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: LLEN requires a list name (key)";
+        }
+        else
+        {
             size_t length = db.llen(tokens[1]);
             response << ":" << length << "\r\n";
         }
     }
-    else if(cmd=="LPUSH"){
-        if(tokens.size()<3){
-            response<<"-Error: LPUSH requires key, and a value";
-        }else{    
-            int size=db.lpush(tokens[1],std::vector<std::string>(tokens.begin()+2, tokens.end()));
-            response<<":"<<std::to_string(size)<<"\r\n";
+    else if (cmd == "LPUSH")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: LPUSH requires key, and a value";
+        }
+        else
+        {
+            int size = db.lpush(tokens[1], std::vector<std::string>(tokens.begin() + 2, tokens.end()));
+            response << ":" << std::to_string(size) << "\r\n";
         }
     }
-    else if(cmd=="RPUSH"){
-        if(tokens.size()<3){
-            response<<"-Error: RPUSH requires key, and a value";
-        }else{    
-            int size = db.rpush(tokens[1],std::vector<std::string>(tokens.begin()+2, tokens.end()));
-            response<<":"<<std::to_string(size)<<"\r\n";
+    else if (cmd == "RPUSH")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: RPUSH requires key, and a value";
+        }
+        else
+        {
+            int size = db.rpush(tokens[1], std::vector<std::string>(tokens.begin() + 2, tokens.end()));
+            response << ":" << std::to_string(size) << "\r\n";
         }
     }
-    else if(cmd=="LPOP"){
-        if(tokens.size()<2){
-            response<<"-Error: LPOP requires the list name (key)";
-        }else{
+    else if (cmd == "LPOP")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: LPOP requires the list name (key)";
+        }
+        else
+        {
             std::string value = db.lpop(tokens[1]);
-            if(value.empty()){
+            if (value.empty())
+            {
                 response << "$-1\r\n";
-            }else{
-            response << "$" << value.size() << "\r\n" << value << "\r\n";
+            }
+            else
+            {
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
             }
         }
-   }
-    else if(cmd=="RPOP"){
-        if(tokens.size()<2){
-            response<<"-Error: RPOP requires the list name (key)";
-        }else{
+    }
+    else if (cmd == "RPOP")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: RPOP requires the list name (key)";
+        }
+        else
+        {
             std::string value = db.rpop(tokens[1]);
-            if(value.empty()){
+            if (value.empty())
+            {
                 response << "$-1\r\n";
-            }else{
-                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            }
+            else
+            {
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
             }
         }
     }
-    else if(cmd=="LREM"){
-        if(tokens.size()<3){
-            response<<"-Error: LREM requires key, count and a value to be removed.";
-        }else{
-            int count = db.lrem(tokens[1],std::stoi(tokens[2]),tokens[3]);
-            response<<":" << count << "\r\n";
+    else if (cmd == "LREM")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: LREM requires key, count and a value to be removed.";
+        }
+        else
+        {
+            int count = db.lrem(tokens[1], std::stoi(tokens[2]), tokens[3]);
+            response << ":" << count << "\r\n";
         }
     }
-    else if(cmd=="LINDEX"){
-        if(tokens.size()<3){
-            response<<"-Error: LINDEX requires key and an elemnent position";
-        }else{
-            std::string value = db.lindex(tokens[1],std::stoi(tokens[2]));
-            if(value.empty()){
+    else if (cmd == "LINDEX")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: LINDEX requires key and an elemnent position";
+        }
+        else
+        {
+            std::string value = db.lindex(tokens[1], std::stoi(tokens[2]));
+            if (value.empty())
+            {
                 response << "$-Error: Index out of range\r\n";
-            }else{
-                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            }
+            else
+            {
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
             }
         }
     }
 
     // ----------------------TODO: Hash operations--------------------------
-    else if(cmd=="HSET"){
-        if(tokens.size()<4){
-            response<<"-Error: HSET requires key, field and value";
-        }else{
-            int result = db.hset(tokens[1],tokens[2],tokens[3]);
-            response<<":"<<result<<"\r\n";
+    else if (cmd == "HSET")
+    {
+        if (tokens.size() < 4)
+        {
+            response << "-Error: HSET requires key, field and value";
+        }
+        else
+        {
+            int result = db.hset(tokens[1], tokens[2], tokens[3]);
+            response << ":" << result << "\r\n";
         }
     }
-    else if(cmd=="HGET"){
-        if(tokens.size()<3){
-            response<<"-Error: HGET requires key and field";
-        }else{
+    else if (cmd == "HGET")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: HGET requires key and field";
+        }
+        else
+        {
             std::string value;
-            std::string result = db.hget(tokens[1],tokens[2],value);
-            if(result.empty()){
-                response << "$-1\r\n"; //null bulk string
-            }else{
-                response << "$" << value.size() << "\r\n" << value << "\r\n";
+            std::string result = db.hget(tokens[1], tokens[2], value);
+            if (result.empty())
+            {
+                response << "$-1\r\n"; // null bulk string
+            }
+            else
+            {
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
             }
         }
     }
-    else if(cmd=="HEXISTS"){
-        if(tokens.size()<3){
-            response<<"-Error: HEXISTS requires key and field";
-        }else{
-            bool exists = db.hexists(tokens[1],tokens[2]);
-            response<<":"<<(exists?1:0)<<"\r\n";
+    else if (cmd == "HEXISTS")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: HEXISTS requires key and field";
+        }
+        else
+        {
+            bool exists = db.hexists(tokens[1], tokens[2]);
+            response << ":" << (exists ? 1 : 0) << "\r\n";
         }
     }
-    else if(cmd=="HDEL"){
-        if(tokens.size()<3){
-            response<<"-Error: HDEL requires key and field";
-        }else{
-            bool deleted = db.hdel(tokens[1],tokens[2]);
-            response<<":"<<(deleted?1:0)<<"\r\n";
+    else if (cmd == "HDEL")
+    {
+        if (tokens.size() < 3)
+        {
+            response << "-Error: HDEL requires key and field";
+        }
+        else
+        {
+            bool deleted = db.hdel(tokens[1], tokens[2]);
+            response << ":" << (deleted ? 1 : 0) << "\r\n";
         }
     }
-    else{
+    else if (cmd == "HLEN")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: HLEN requires key";
+        }
+        else
+        {
+            size_t length = db.hlen(tokens[1]);
+            response << ":" << length << "\r\n";
+        }
+    }
+    else if (cmd == "HKEYS")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: HKEYS requires a key";
+        }
+        else
+        {
+            std::vector<std::string> keys = db.hkeys(tokens[1]);
+            response << "*" << keys.size() << "\r\n";
+            for (const auto key : keys)
+            {
+                response << "$" << key.size() << "\r\n"
+                         << key << "\r\n";
+            }
+        }
+    }
+    else if (cmd == "HVALS")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: HVALS requires a key";
+        }
+        else
+        {
+            std::vector<std::string> values = db.hvals(tokens[1]);
+            response << "*" << values.size() << "\r\n";
+            for (const auto val : values)
+            {
+                response << "$" << val.size() << "\r\n"
+                         << val << "\r\n";
+            }
+        }
+    }
+    else if (cmd == "HGETALL")
+    {
+        if (tokens.size() < 2)
+        {
+            response << "-Error: HGETALL requires a key";
+        }
+        else
+        {
+            std::unordered_map<const std::string, const std::string> allMap = db.hgetall(tokens[1]);
+            response << "*" << allMap.size() << "\r\n";
+            for (const auto [field, value] : allMap)
+            {
+                response << "$" << field.size() << "\r\n"
+                         << field << "\r\n";
+                response << "$" << value.size() << "\r\n"
+                         << value << "\r\n";
+            }
+        }
+    }
+    else if (cmd == "HMSET")
+    {
+        if (tokens.size() < 4)
+        {
+            response << "-Error: HMSET requires a minimum of key, field and value";
+        }
+        else
+        {
+            for (int i = 2; i < tokens.size(); i += 2)
+            {
+                db.hset(tokens[1], tokens[i], tokens[i + 1]);
+            }
+            response << "+OK" << "\r\n";
+        }
+    }
+    else
+    {
         response << "-Error: Unknown command '" << cmd << "'\r\n";
-        
     }
 
     return response.str();
