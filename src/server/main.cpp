@@ -1,6 +1,6 @@
 #include "../../include/Server.h"
 #include "../../include/Database.h"
-#include "../../include/httplib.h"
+#include "../utils/MetricsServer.cpp"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -8,6 +8,8 @@
 
 
 int main(int argc, char* argv[]){
+
+    std::thread metrics(startMetricsServer);
 
     int port = 6379;    // default port
     if(argc >=2) port = std::stoi(argv[1]);      // client provided port
@@ -36,6 +38,9 @@ int main(int argc, char* argv[]){
 
     // run the server
     server.run();
+
+    // join metrics server thread
+    metrics.join();
     
     return 0;
 }

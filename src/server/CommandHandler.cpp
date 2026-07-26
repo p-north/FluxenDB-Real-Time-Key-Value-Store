@@ -1,5 +1,6 @@
 #include "../../include/CommandHandler.h"
 #include "../../include/Database.h"
+#include "../../include/Metrics.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -85,21 +86,27 @@ std::string commandHandler::processCommand(const std::string &commandLine)
     // connnect to database
     Database &db = Database::getInstance();
 
+  
+    
+
     // check commands
     // common commands--------------------
     if (cmd == "PING")
     {
         response << "+PONG\r\n";
+        Metrics::getInstance().incrementSuccessfullCommand(cmd);
     }
     else if (cmd == "ECHO")
     {
         if (tokens.size() < 2)
         {
             response << "-Error: ECHO requires a messag\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
-        {
+        {   
             response << "+" << tokens[1] << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "FLUSHALL")
@@ -107,17 +114,19 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         db.flushAll();
         response << "+OK\r\n";
     }
-    // TODO: Key-value operations------------
+    // Key-value operations------------
     else if (cmd == "SET")
     {
         if (tokens.size() < 3)
         {
             response << "-Error: SET requires key and value\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             db.set(tokens[1], tokens[2]);
             response << "+OK\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "GET")
@@ -125,6 +134,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: GET requires key\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -134,6 +144,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                          << value << "\r\n";
             else
                 response << "$-1\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "KEYS")
@@ -145,16 +156,19 @@ std::string commandHandler::processCommand(const std::string &commandLine)
             response << "$" << key.size() << "\r\n"
                      << key << "\r\n";
         }
+        Metrics::getInstance().incrementSuccessfullCommand(cmd);
     }
     else if (cmd == "TYPE")
     {
         if (tokens.size() < 2)
         {
             response << "-Error: TYPE requires key\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             response << "+" << db.type(tokens[1]) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "DEL" || cmd == "UNLINK")
@@ -162,11 +176,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: " << cmd << "requires key" << "\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             bool res = db.del(tokens[1]);
             response << ":" << (res ? 1 : 0) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "EXPIRE")
@@ -174,6 +190,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: EXPIRE requires key and time in seconds\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -181,6 +198,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "+OK\r\n";
             else
                 response << "$-1\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "RENAME")
@@ -188,29 +206,34 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: RENAME requires old key name and new key name\r\n";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             db.rename(tokens[1], tokens[2]);
             response << "+OK\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
-    // TODO: List operations
+    // List operations
     else if (cmd == "LSET")
     {
         if (tokens.size() < 3)
         {
             response << "-Error: LSET requires key, position index and a value to set";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             if (db.lset(tokens[1], std::stoi(tokens[2]), tokens[3]))
             {
                 response << "+OK\r\n";
+                Metrics::getInstance().incrementSuccessfullCommand(cmd);
             }
             else
             {
                 response << "-Error: Index out of range\r\n";
+                Metrics::getInstance().incrementFailureCommand(cmd);
             }
         }
     }
@@ -219,6 +242,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: LGET requires a list name (key)";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -229,6 +253,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << item.size() << "\r\n"
                          << item << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "LLEN")
@@ -236,11 +261,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: LLEN requires a list name (key)";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             size_t length = db.llen(tokens[1]);
             response << ":" << length << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "LPUSH")
@@ -248,11 +275,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: LPUSH requires key, and a value";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             int size = db.lpush(tokens[1], std::vector<std::string>(tokens.begin() + 2, tokens.end()));
             response << ":" << std::to_string(size) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "RPUSH")
@@ -260,11 +289,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: RPUSH requires key, and a value";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             int size = db.rpush(tokens[1], std::vector<std::string>(tokens.begin() + 2, tokens.end()));
             response << ":" << std::to_string(size) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "LPOP")
@@ -272,6 +303,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: LPOP requires the list name (key)";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -279,12 +311,14 @@ std::string commandHandler::processCommand(const std::string &commandLine)
             if (value.empty())
             {
                 response << "$-1\r\n";
+                
             }
             else
             {
                 response << "$" << value.size() << "\r\n"
                          << value << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "RPOP")
@@ -292,6 +326,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: RPOP requires the list name (key)";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -305,6 +340,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << value.size() << "\r\n"
                          << value << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "LREM")
@@ -312,11 +348,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: LREM requires key, count and a value to be removed.";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             int count = db.lrem(tokens[1], std::stoi(tokens[2]), tokens[3]);
             response << ":" << count << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "LINDEX")
@@ -324,6 +362,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: LINDEX requires key and an elemnent position";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -331,26 +370,30 @@ std::string commandHandler::processCommand(const std::string &commandLine)
             if (value.empty())
             {
                 response << "$-Error: Index out of range\r\n";
+                Metrics::getInstance().incrementFailureCommand(cmd);
             }
             else
             {
                 response << "$" << value.size() << "\r\n"
                          << value << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
 
-    // ----------------------TODO: Hash operations--------------------------
+    // Hash operations
     else if (cmd == "HSET")
     {
         if (tokens.size() < 4)
         {
             response << "-Error: HSET requires key, field and value";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             int result = db.hset(tokens[1], tokens[2], tokens[3]);
             response << ":" << result << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HGET")
@@ -358,6 +401,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: HGET requires key and field";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -372,6 +416,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << value.size() << "\r\n"
                          << value << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HEXISTS")
@@ -379,11 +424,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: HEXISTS requires key and field";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             bool exists = db.hexists(tokens[1], tokens[2]);
             response << ":" << (exists ? 1 : 0) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HDEL")
@@ -391,11 +438,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 3)
         {
             response << "-Error: HDEL requires key and field";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             bool deleted = db.hdel(tokens[1], tokens[2]);
             response << ":" << (deleted ? 1 : 0) << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HLEN")
@@ -403,11 +452,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: HLEN requires key";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
             size_t length = db.hlen(tokens[1]);
             response << ":" << length << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HKEYS")
@@ -415,6 +466,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: HKEYS requires a key";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -425,6 +477,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << key.size() << "\r\n"
                          << key << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HVALS")
@@ -432,6 +485,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: HVALS requires a key";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -442,6 +496,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << val.size() << "\r\n"
                          << val << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HGETALL")
@@ -449,6 +504,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 2)
         {
             response << "-Error: HGETALL requires a key";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -461,6 +517,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 response << "$" << value.size() << "\r\n"
                          << value << "\r\n";
             }
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else if (cmd == "HMSET")
@@ -468,6 +525,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         if (tokens.size() < 4)
         {
             response << "-Error: HMSET requires a minimum of key, field and value";
+            Metrics::getInstance().incrementFailureCommand(cmd);
         }
         else
         {
@@ -476,11 +534,13 @@ std::string commandHandler::processCommand(const std::string &commandLine)
                 db.hset(tokens[1], tokens[i], tokens[i + 1]);
             }
             response << "+OK" << "\r\n";
+            Metrics::getInstance().incrementSuccessfullCommand(cmd);
         }
     }
     else
     {
         response << "-Error: Unknown command '" << cmd << "'\r\n";
+        Metrics::getInstance().incrementFailureCommand(cmd);
     }
 
     return response.str();
