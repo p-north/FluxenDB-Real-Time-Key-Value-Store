@@ -1,6 +1,6 @@
 #ifndef METRICS_H
 #define METRICS_H
-#define PORT 8080
+#define METRICS_PORT 8080
 #pragma once
 #include <string>
 #include <atomic>
@@ -15,7 +15,9 @@ class Metrics {
         void addClient();
         void removeClient();
 
+
         std::string exportMetrics();
+        size_t getMemoryUsageKB();
 
     private:
         Metrics() = default;

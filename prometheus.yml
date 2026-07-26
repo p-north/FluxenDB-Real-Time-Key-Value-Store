@@ -2,10 +2,6 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  # - job_name: 'fluxendb'
-  #   static_configs:
-  #     - targets: ['fluxendb:6379']
-  
-  - job_name: 'cadvisor'
+  - job_name: 'fluxendb'
     static_configs:
-      - targets: ['cadvisor:8080']
+      - targets: ['host.docker.internal:8080']

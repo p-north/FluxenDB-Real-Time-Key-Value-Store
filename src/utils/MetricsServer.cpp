@@ -9,5 +9,5 @@ void startMetricsServer()
             { res.set_content(
                   Metrics::getInstance().exportMetrics(), "text/plain"); });
 
-    svr.listen("0.0.0.0", PORT);
+    svr.listen("0.0.0.0", METRICS_PORT);
 }
