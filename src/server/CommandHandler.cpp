@@ -452,7 +452,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         }
         else
         {
-            std::unordered_map<const std::string, const std::string> allMap = db.hgetall(tokens[1]);
+            std::unordered_map<std::string, std::string> allMap = db.hgetall(tokens[1]);
             response << "*" << allMap.size() << "\r\n";
             for (const auto [field, value] : allMap)
             {
