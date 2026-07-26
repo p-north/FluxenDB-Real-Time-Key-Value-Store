@@ -57,7 +57,7 @@ void Server::run(){
         return;
     }
 
-    if(listen(server_socket, 10) < 0){
+    if(listen(server_socket, 128) < 0){
         std::cerr << "Error Listening ON Server Socket\n";
         return;
     }
@@ -70,17 +70,19 @@ void Server::run(){
     while(running){
         int client_socket = accept(server_socket, nullptr, nullptr);
         std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTER "<<client_socket<< " CONNECTED""\n";
-        Metrics::getInstance().addClient();
         
-        if(client_socket < 0)
+        
+        if(client_socket < 0){
             if(running){
                 std::cerr << "Error accepting client connections\n";
                 continue;
             }
-        //    break;
+        }
         
+        Metrics::getInstance().addClient();
         threads.emplace_back([client_socket, &cmdHandler](){
-            char buffer[1024];
+            char buffer[4096];
+            
             while(true){
                 memset(buffer, 0, sizeof(buffer));
                 int bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
