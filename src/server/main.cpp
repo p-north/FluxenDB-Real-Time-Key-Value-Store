@@ -1,5 +1,6 @@
 #include "../../include/Server.h"
 #include "../../include/Database.h"
+#include "../../include/httplib.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
