@@ -42,6 +42,41 @@ size_t Metrics::getMemoryUsageKB(){
     return 0;
 }
 
+  double Metrics::getCpuUsagePercent() {
+      std::ifstream file("/proc/stat");
+      std::string cpu;
+      long long totalUser, totalUserLow, totalSys, totalIdle, totalIOwait, totalIRQ, totalSoftIRQ;
+  
+      file >> cpu >> totalUser >> totalUserLow >> totalSys >> totalIdle
+           >> totalIOwait >> totalIRQ >> totalSoftIRQ;
+  
+      // first call — just store and return 0
+      if (lastTotalUser == 0) {
+          lastTotalUser    = totalUser;
+          lastTotalUserLow = totalUserLow;
+          lastTotalSys     = totalSys;
+          lastTotalIdle    = totalIdle;
+          return 0.0;
+      }
+  
+      long long deltaUser  = totalUser    - lastTotalUser;
+      long long deltaLow   = totalUserLow - lastTotalUserLow;
+      long long deltaSys   = totalSys     - lastTotalSys;
+      long long deltaIdle  = totalIdle    - lastTotalIdle;
+      long long deltaTotal = deltaUser + deltaLow + deltaSys + deltaIdle;
+  
+      double percent = 0.0;
+      if (deltaTotal > 0)
+          percent = (double)(deltaUser + deltaLow + deltaSys) / deltaTotal * 100.0;
+  
+      lastTotalUser    = totalUser;
+      lastTotalUserLow = totalUserLow;
+      lastTotalSys     = totalSys;
+      lastTotalIdle    = totalIdle;
+  
+      return percent;
+  }
+
 std::string Metrics::exportMetrics()
 {
     std::string output;
@@ -83,7 +118,16 @@ std::string Metrics::exportMetrics()
     output += "# TYPE fluxendb_memory_usage gauge\n";
     output += "fluxendb_memory_usage ";
     output += std::to_string(getMemoryUsageKB());
+    output += "\n";
+
+    output += "# HELP fluxendb_cpu_usage Process CPU usage in percentage\n";
+    output += "# TYPE fluxendb_cpu_usage gauge\n";
+    output += "fluxendb_cpu_usage ";
+    output += std::to_string(getCpuUsagePercent());
     output += "\n\n";
+
+
+
 
     return output;
 }

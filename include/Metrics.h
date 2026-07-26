@@ -17,10 +17,14 @@ class Metrics {
 
 
         std::string exportMetrics();
+        double getCpuUsagePercent();
         size_t getMemoryUsageKB();
 
     private:
         Metrics() = default;
+
+        long long lastTotalUser = 0, lastTotalUserLow = 0;
+        long long lastTotalSys = 0, lastTotalIdle = 0;
 
         std::atomic<int> totalSuccessCommands{0};
         std::atomic<int> totalFailureComands{0};
