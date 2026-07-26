@@ -23,6 +23,7 @@ enable_testing()
 # Collect source files
 file(GLOB_RECURSE SERVER_SRC
     "src/server/*.cpp"
+    "src/utils/*.cpp"
 )
 list(FILTER SERVER_SRC EXCLUDE REGEX ".*/main\\.cpp$")
 
