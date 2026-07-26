@@ -1,5 +1,6 @@
 #ifndef METRICS_H
 #define METRICS_H
+#define PORT 8080
 #pragma once
 #include <string>
 #include <atomic>

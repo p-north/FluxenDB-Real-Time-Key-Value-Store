@@ -10,6 +10,7 @@
 int main(int argc, char* argv[]){
 
     std::thread metrics(startMetricsServer);
+    std::cout << "Metrics http server listeing on port " << PORT << std::endl;
 
     int port = 6379;    // default port
     if(argc >=2) port = std::stoi(argv[1]);      // client provided port

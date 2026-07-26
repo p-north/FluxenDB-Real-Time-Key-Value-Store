@@ -1,6 +1,7 @@
 #include "../../include/Server.h"
 #include "../../include/CommandHandler.h"
 #include "../../include/Database.h"
+#include "../../include/Metrics.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -68,7 +69,9 @@ void Server::run(){
 
     while(running){
         int client_socket = accept(server_socket, nullptr, nullptr);
-        std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTeR: "<<client_socket<<"\n";
+        std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTER "<<client_socket<< " CONNECTED""\n";
+        Metrics::getInstance().addClient();
+        
         if(client_socket < 0)
             if(running){
                 std::cerr << "Error accepting client connections\n";
@@ -87,6 +90,8 @@ void Server::run(){
                 send(client_socket, response.c_str(), response.size(), 0);
             }
             close(client_socket);
+                std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTER "<<client_socket<< " DISCONNECTED""\n";
+            Metrics::getInstance().removeClient();
         });
     }
 

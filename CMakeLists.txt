@@ -48,7 +48,7 @@ add_library(client_lib
 # Client executable
 add_executable(client src/client/main.cpp)
 
-target_link_libraries(client PRIVATE client_lib Threads::Threads)
+target_link_libraries(client PRIVATE client_lib server_lib Threads::Threads)
 
 
 # Tests
