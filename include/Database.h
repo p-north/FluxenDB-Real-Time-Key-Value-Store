@@ -2,7 +2,7 @@
 #define DATABASE_H
 
 #include <string>
-#include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 #include <chrono>
@@ -65,7 +65,11 @@ private:
     ~Database() = default;
     Database(const Database &) = delete;
     Database &operator=(const Database &) = delete;
-    std::mutex db_mutex;
+    
+    // shared mutex
+    // shared_lock = reads
+    // unique_lock = writes
+    mutable std::shared_mutex db_mutex;
 
     // --kv_store from string(key) -> string(value)--
     std::unordered_map<std::string, std::string> kv_store;

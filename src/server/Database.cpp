@@ -1,7 +1,6 @@
 #include "../../include/Database.h"
-
-#include <mutex>
 #include <fstream>
+#include <mutex>
 #include <sstream>
 #include <chrono>
 #include <algorithm>
@@ -25,10 +24,10 @@ Database &Database::getInstance()
 
 */
 
-// TODO: Implement Key-value operations
+// Implement Key-value operations
 bool Database::flushAll()
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     kv_store.clear();
     list_store.clear();
     hash_store.clear();
@@ -36,12 +35,12 @@ bool Database::flushAll()
 }
 void Database::set(const std::string &key, const std::string &value)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     kv_store[key] = value;
 }
 bool Database::get(const std::string &key, std::string &value)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     auto it = kv_store.find(key);
     if (it != kv_store.end())
     {
@@ -52,7 +51,7 @@ bool Database::get(const std::string &key, std::string &value)
 }
 std::vector<std::string> Database::keys()
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> keys;
     for (const auto it : kv_store)
     {
@@ -70,7 +69,7 @@ std::vector<std::string> Database::keys()
 }
 std::string Database::type(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     if (kv_store.find(key) != kv_store.end())
     {
         return "string";
@@ -88,7 +87,7 @@ std::string Database::type(const std::string &key)
 }
 bool Database::del(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     bool erased = false;
     erased |= kv_store.erase(key) > 0;
     erased |= list_store.erase(key) > 0;
@@ -98,7 +97,7 @@ bool Database::del(const std::string &key)
 // expire
 bool Database::expire(const std::string &key, const std::string &seconds)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);;
     bool exist = (kv_store.find(key) != kv_store.end()) ||
                  (list_store.find(key) != list_store.end()) ||
                  (hash_store.find(key) != hash_store.end());
@@ -110,7 +109,7 @@ bool Database::expire(const std::string &key, const std::string &seconds)
 // rename
 bool Database::rename(const std::string &oldKey, const std::string &newKey)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     bool found = false;
 
     auto itKv = kv_store.find(oldKey);
@@ -152,7 +151,7 @@ bool Database::rename(const std::string &oldKey, const std::string &newKey)
 
 bool Database::lset(const std::string &key, const int &index, const std::string &value)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
     if (index < 0 || index >= list.size())
     {
@@ -164,19 +163,19 @@ bool Database::lset(const std::string &key, const int &index, const std::string 
 
 std::vector<std::string> Database::lget(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     return list_store[key];
 }
 
 size_t Database::llen(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     return list_store[key].size();
 }
 
 int Database::lpush(const std::string &key, const std::vector<std::string> &values)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
     for (const std::string &value : values)
     {
@@ -188,7 +187,7 @@ int Database::lpush(const std::string &key, const std::vector<std::string> &valu
 
 int Database::rpush(const std::string &key, const std::vector<std::string> &values)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
     for (const std::string &value : values)
     {
@@ -199,7 +198,7 @@ int Database::rpush(const std::string &key, const std::vector<std::string> &valu
 
 std::string Database::lpop(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
 
     if (!list.empty())
@@ -213,7 +212,7 @@ std::string Database::lpop(const std::string &key)
 
 std::string Database::rpop(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
     if (!list.empty())
     {
@@ -226,7 +225,7 @@ std::string Database::rpop(const std::string &key)
 
 int Database::lrem(const std::string &key, int count, const std::string &value)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     if (list_store.find(key) == list_store.end())
     {
         return 0;
@@ -273,7 +272,7 @@ int Database::lrem(const std::string &key, int count, const std::string &value)
 
 std::string Database::lindex(const std::string &key, const int &index)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> &list = list_store[key];
     if (index < 0 || index >= list.size())
     {
@@ -286,7 +285,7 @@ std::string Database::lindex(const std::string &key, const int &index)
 bool Database::hset(const std::string &key, const std::string &field, const std::string &value)
 {
 
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::unordered_map<std::string, std::string> &hash = hash_store[key];
     if (hash.find(field) == hash.end())
     {
@@ -300,7 +299,7 @@ bool Database::hset(const std::string &key, const std::string &field, const std:
 std::string Database::hget(const std::string &key, const std::string &field, std::string &value)
 {
 
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     if (hash_store.find(key) == hash_store.end())
     {
         return "";
@@ -317,7 +316,7 @@ std::string Database::hget(const std::string &key, const std::string &field, std
 bool Database::hexists(const std::string &key, const std::string &field)
 {
 
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     if (hash_store.find(key) == hash_store.end())
     {
         return false;
@@ -328,7 +327,7 @@ bool Database::hexists(const std::string &key, const std::string &field)
 
 bool Database::hdel(const std::string &key, const std::string &field)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     if (hash_store.find(key) == hash_store.end())
     {
         return false;
@@ -339,13 +338,13 @@ bool Database::hdel(const std::string &key, const std::string &field)
 
 size_t Database::hlen(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     return hash_store[key].size();
 }
 
 std::vector<std::string> Database::hkeys(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> result;
     for (const auto [field, value] : hash_store[key])
     {
@@ -356,7 +355,7 @@ std::vector<std::string> Database::hkeys(const std::string &key)
 
 std::vector<std::string> Database::hvals(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     std::vector<std::string> result;
     for (const auto [field, value] : hash_store[key])
     {
@@ -367,7 +366,7 @@ std::vector<std::string> Database::hvals(const std::string &key)
 
 std::unordered_map<std::string, std::string> Database::hgetall(const std::string &key)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::shared_lock<std::shared_mutex> lock(db_mutex);
     std::unordered_map<std::string, std::string> allMap;
     for (const auto [field, value] : hash_store[key])
     {
@@ -380,7 +379,7 @@ std::unordered_map<std::string, std::string> Database::hgetall(const std::string
 // dumps database -> iterates through all data structures, adds to datbase file
 bool Database::dump(const std::string &filename)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::ofstream ofs(filename, std::ios::binary);
     if (!ofs)
         return false;
@@ -418,7 +417,7 @@ bool Database::dump(const std::string &filename)
 
 bool Database::load(const std::string &filename)
 {
-    std::lock_guard<std::mutex> lock(db_mutex);
+    std::unique_lock<std::shared_mutex> lock(db_mutex);
     std::ifstream ifs(filename, std::ios::binary);
     if (!ifs)
         return false;
