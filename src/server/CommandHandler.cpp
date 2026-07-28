@@ -7,7 +7,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
-
+#include <chrono>
 // RESP parser:
 // *2\r\n\$4\r\n\PING\r\n\$4\r\n\TEST\r\n
 // *2 -> array has 2 elements
@@ -86,7 +86,7 @@ std::string commandHandler::processCommand(const std::string &commandLine)
     // connnect to database
     Database &db = Database::getInstance();
 
-  
+    auto latency_start = std::chrono::steady_clock::now();
     
 
     // check commands
@@ -542,6 +542,11 @@ std::string commandHandler::processCommand(const std::string &commandLine)
         response << "-Error: Unknown command '" << cmd << "'\r\n";
         Metrics::getInstance().incrementFailureCommand(cmd);
     }
+
+    auto latency_end = std::chrono::steady_clock::now();
+    double duration_seconds =
+        std::chrono::duration<double>(latency_end - latency_start).count();
+    Metrics::getInstance().recordCommandLatency(cmd, duration_seconds);
 
     return response.str();
 }
