@@ -5,6 +5,43 @@
 #include <iomanip>
 
 namespace {
+    // The time limit for each bucket, in seconds.
+    // Bucket 0 counts commands that took 500 nanoseconds or less, and so on.
+    const double BUCKET_LIMITS[BUCKET_COUNT] = {
+        0.0000005,   // 500 nanoseconds
+        0.000001,    // 1 microsecond
+        0.0000025,
+        0.000005,
+        0.00001,     // 10 microseconds
+        0.000025,
+        0.00005,
+        0.0001,      // 100 microseconds
+        0.00025,
+        0.0005,
+        0.001,       // 1 millisecond
+        0.005,
+        0.025,
+        0.1          // 100 milliseconds
+    };
+
+    // The same limits as text, because Prometheus needs them as labels.
+    const std::string BUCKET_LABELS[BUCKET_COUNT] = {
+        "0.0000005",
+        "0.000001",
+        "0.0000025",
+        "0.000005",
+        "0.00001",
+        "0.000025",
+        "0.00005",
+        "0.0001",
+        "0.00025",
+        "0.0005",
+        "0.001",
+        "0.005",
+        "0.025",
+        "0.1"
+    };
+
     enum class CommandKind { Read, Write, Other };
     CommandKind classifyCommand(const std::string& command) {
         static const std::unordered_set<std::string> readCommands = {
@@ -26,54 +63,35 @@ namespace {
     void observeLatency(CommandLatencyStats& stats, double durationSeconds) {
         stats.count++;
         stats.sum_seconds += durationSeconds;
-        // Cumulative buckets — increment every bucket whose upper bound >= duration
-        if (durationSeconds <= 0.0001) stats.bucket_0001++;
-        if (durationSeconds <= 0.0005) stats.bucket_0005++;
-        if (durationSeconds <= 0.001)  stats.bucket_001++;
-        if (durationSeconds <= 0.005)  stats.bucket_005++;
-        if (durationSeconds <= 0.01)   stats.bucket_01++;
-        if (durationSeconds <= 0.025)  stats.bucket_025++;
-        if (durationSeconds <= 0.05)   stats.bucket_05++;
-        if (durationSeconds <= 0.1)    stats.bucket_1++;
-        if (durationSeconds <= 0.25)   stats.bucket_25++;
-        if (durationSeconds <= 0.5)    stats.bucket_5++;
-        if (durationSeconds <= 1.0)    stats.bucket_10++;
-        if (durationSeconds <= 2.5)    stats.bucket_25s++;
-        if (durationSeconds <= 5.0)    stats.bucket_50++;
-        stats.bucket_inf++;  // +Inf bucket always gets incremented
+
+        // Add the command to every bucket it fits inside.
+        for (int i = 0; i < BUCKET_COUNT; i++) {
+            if (durationSeconds <= BUCKET_LIMITS[i]) {
+                stats.buckets[i]++;
+            }
+        }
     }
 
     void appendHistogram(std::ostringstream& out,
-        const std::string& command,
-        const CommandLatencyStats& stats) {
-auto bucket = [&](const char* le, size_t count) {
-out << "fluxendb_command_duration_seconds_bucket{command=\""
-<< command << "\",le=\"" << le << "\"} "
-<< count << "\n";
-};
+                         const std::string& command,
+                         const CommandLatencyStats& stats) {
+        // Print one line per bucket
+        for (int i = 0; i < BUCKET_COUNT; i++) {
+            out << "fluxendb_command_duration_seconds_bucket{command=\""
+                << command << "\",le=\"" << BUCKET_LABELS[i] << "\"} "
+                << stats.buckets[i] << "\n";
+        }
 
-bucket("0.0001", stats.bucket_0001);
-bucket("0.0005", stats.bucket_0005);
-bucket("0.001",  stats.bucket_001);
-bucket("0.005",  stats.bucket_005);
-bucket("0.01",   stats.bucket_01);
-bucket("0.025",  stats.bucket_025);
-bucket("0.05",   stats.bucket_05);
-bucket("0.1",    stats.bucket_1);
-bucket("0.25",   stats.bucket_25);
-bucket("0.5",    stats.bucket_5);
-bucket("1.0",    stats.bucket_10);
-bucket("2.5",    stats.bucket_25s);
-bucket("5.0",    stats.bucket_50);
-bucket("+Inf",   stats.bucket_inf);
+        out << "fluxendb_command_duration_seconds_bucket{command=\""
+            << command << "\",le=\"+Inf\"} " << stats.count << "\n";
 
-out << std::fixed << std::setprecision(6);
-out << "fluxendb_command_duration_seconds_sum{command=\""
-<< command << "\"} " << stats.sum_seconds << "\n";
-out << "fluxendb_command_duration_seconds_count{command=\""
-<< command << "\"} " << stats.count << "\n";
-}  
-} 
+        out << std::fixed << std::setprecision(9);
+        out << "fluxendb_command_duration_seconds_sum{command=\""
+            << command << "\"} " << stats.sum_seconds << "\n";
+        out << "fluxendb_command_duration_seconds_count{command=\""
+            << command << "\"} " << stats.count << "\n";
+    }
+}
 // Singleton pattern object
 Metrics &Metrics::getInstance()
 {

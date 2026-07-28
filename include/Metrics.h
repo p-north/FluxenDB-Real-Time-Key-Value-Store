@@ -7,24 +7,13 @@
 #include <mutex>
 #include <unordered_map>
 
+// histogram bucket sizes for command latency in seconds
+const int BUCKET_COUNT = 14;
+
 struct CommandLatencyStats {
-    size_t count = 0;
-    double sum_seconds = 0.0;
-    // cumulative bucket counts (Prometheus histogram format)
-    size_t bucket_0001 = 0;   // le="0.0001"
-    size_t bucket_0005 = 0;   // le="0.0005"
-    size_t bucket_001  = 0;   // le="0.001"
-    size_t bucket_005  = 0;   // le="0.005"
-    size_t bucket_01   = 0;   // le="0.01"
-    size_t bucket_025  = 0;   // le="0.025"
-    size_t bucket_05   = 0;   // le="0.05"
-    size_t bucket_1    = 0;   // le="0.1"
-    size_t bucket_25   = 0;   // le="0.25"
-    size_t bucket_5    = 0;   // le="0.5"
-    size_t bucket_10   = 0;   // le="1.0"
-    size_t bucket_25s  = 0;   // le="2.5"
-    size_t bucket_50   = 0;   // le="5.0"
-    size_t bucket_inf  = 0;   // le="+Inf" (always incremented)
+    size_t count = 0;                      // how many times this command ran
+    double sum_seconds = 0.0;              // total time spent on it
+    size_t buckets[BUCKET_COUNT] = {0};    // one counter per bucket, all start at 0
 };
 
 class Metrics {
