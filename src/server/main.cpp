@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     int port = 6379;    // default port
     if(argc >=2) port = std::stoi(argv[1]);      // client provided port
 
-    if(Database::getInstance().load("dump.my_rdb"))
+    if(Database::getInstance().load("dump.my_db"))
         std::cout << "Database loaded from dump file\n";
     else
         std::cout << "No dump found or load failed; starting with an empty database.\n";
