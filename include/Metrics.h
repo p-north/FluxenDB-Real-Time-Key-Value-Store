@@ -6,6 +6,8 @@
 #include <atomic>
 #include <mutex>
 #include <unordered_map>
+#include <sys/resource.h>
+#include <chrono>
 
 // histogram bucket sizes for command latency in seconds
 const int BUCKET_COUNT = 14;
@@ -38,9 +40,10 @@ class Metrics {
         std::mutex latency_mutex_;
         std::unordered_map<std::string, CommandLatencyStats> latency_by_command_;
 
-        long long lastTotalUser = 0, lastTotalUserLow = 0;
-        long long lastTotalSys = 0, lastTotalIdle = 0;
-
+        // long long lastTotalUser = 0, lastTotalUserLow = 0;
+        // long long lastTotalSys = 0, lastTotalIdle = 0;
+        double lastCpuSeconds = 0.0;
+        double lastWallSeconds = 0.0;
         std::atomic<int> totalSuccessCommands{0};
         std::atomic<int> totalFailureComands{0};
         std::atomic<int> clients{0};
