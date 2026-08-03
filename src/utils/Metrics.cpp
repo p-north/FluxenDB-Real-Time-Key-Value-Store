@@ -152,41 +152,72 @@ size_t Metrics::getMemoryUsageKB(){
     }
     return 0;
 }
+double Metrics::getCpuUsagePercent() {
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
 
-  double Metrics::getCpuUsagePercent() {
-      std::ifstream file("/proc/stat");
-      std::string cpu;
-      long long totalUser, totalUserLow, totalSys, totalIdle, totalIOwait, totalIRQ, totalSoftIRQ;
+    // CPU time this process has actually burned, user time plus kernel time.
+    double cpuNow = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1000000.0
+                  + usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1000000.0;
+
+    // Wall clock, so we can calculate the real time went towards the CPU.
+    double wallNow = std::chrono::duration<double>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    // first call — just store and return 0
+    if (lastWallSeconds == 0) {
+        lastCpuSeconds  = cpuNow;
+        lastWallSeconds = wallNow;
+        return 0.0;
+    }
+
+    double cpuDelta  = cpuNow  - lastCpuSeconds;
+    double wallDelta = wallNow - lastWallSeconds;
+
+    lastCpuSeconds  = cpuNow;
+    lastWallSeconds = wallNow;
+
+    if (wallDelta <= 0)
+        return 0.0;
+
+    // Goes above 100 when several threads are busy at once: 200 means two full cores.
+    return cpuDelta / wallDelta * 100.0;
+}
+
+//   double Metrics::getCpuUsagePercent() {
+//       std::ifstream file("/proc/stat");
+//       std::string cpu;
+//       long long totalUser, totalUserLow, totalSys, totalIdle, totalIOwait, totalIRQ, totalSoftIRQ;
   
-      file >> cpu >> totalUser >> totalUserLow >> totalSys >> totalIdle
-           >> totalIOwait >> totalIRQ >> totalSoftIRQ;
+//       file >> cpu >> totalUser >> totalUserLow >> totalSys >> totalIdle
+//            >> totalIOwait >> totalIRQ >> totalSoftIRQ;
   
-      // first call — just store and return 0
-      if (lastTotalUser == 0) {
-          lastTotalUser    = totalUser;
-          lastTotalUserLow = totalUserLow;
-          lastTotalSys     = totalSys;
-          lastTotalIdle    = totalIdle;
-          return 0.0;
-      }
+//       // first call — just store and return 0
+//       if (lastTotalUser == 0) {
+//           lastTotalUser    = totalUser;
+//           lastTotalUserLow = totalUserLow;
+//           lastTotalSys     = totalSys;
+//           lastTotalIdle    = totalIdle;
+//           return 0.0;
+//       }
   
-      long long deltaUser  = totalUser    - lastTotalUser;
-      long long deltaLow   = totalUserLow - lastTotalUserLow;
-      long long deltaSys   = totalSys     - lastTotalSys;
-      long long deltaIdle  = totalIdle    - lastTotalIdle;
-      long long deltaTotal = deltaUser + deltaLow + deltaSys + deltaIdle;
+//       long long deltaUser  = totalUser    - lastTotalUser;
+//       long long deltaLow   = totalUserLow - lastTotalUserLow;
+//       long long deltaSys   = totalSys     - lastTotalSys;
+//       long long deltaIdle  = totalIdle    - lastTotalIdle;
+//       long long deltaTotal = deltaUser + deltaLow + deltaSys + deltaIdle;
   
-      double percent = 0.0;
-      if (deltaTotal > 0)
-          percent = (double)(deltaUser + deltaLow + deltaSys) / deltaTotal * 100.0;
+//       double percent = 0.0;
+//       if (deltaTotal > 0)
+//           percent = (double)(deltaUser + deltaLow + deltaSys) / deltaTotal * 100.0;
   
-      lastTotalUser    = totalUser;
-      lastTotalUserLow = totalUserLow;
-      lastTotalSys     = totalSys;
-      lastTotalIdle    = totalIdle;
+//       lastTotalUser    = totalUser;
+//       lastTotalUserLow = totalUserLow;
+//       lastTotalSys     = totalSys;
+//       lastTotalIdle    = totalIdle;
   
-      return percent;
-  }
+//       return percent;
+//   }
 
 std::string Metrics::exportMetrics()
 {
