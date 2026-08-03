@@ -2,30 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "ad779gm",
-    "namespace": "default",
-    "uid": "f5011857-7766-4677-ada5-81a0154e8de9",
-    "resourceVersion": "1785647785171012",
-    "generation": 9,
-    "creationTimestamp": "2026-08-02T04:20:38Z",
-    "labels": {
-      "grafana.app/deprecatedInternalID": "3106895082524672"
-    },
-    "annotations": {
-      "grafana.app/createdBy": "access-policy:service",
-      "grafana.app/folder": "eftxmsfac0buob",
-      "grafana.app/managedBy": "classic-file-provisioning",
-      "grafana.app/managerAllowsEdits": "true",
-      "grafana.app/managerId": "FluxenDB",
-      "grafana.app/saved-from-ui": "Grafana v13.1.1 (a9cee6e172)",
-      "grafana.app/sourceChecksum": "3220c1f4a480e68f2dd7559a00b08845",
-      "grafana.app/sourcePath": "/var/lib/grafana/dashboards/fluxendb.json",
-      "grafana.app/sourceTimestamp": "1785373898000",
-      "grafana.app/updatedBy": "user:aftxmscg35ybkb",
-      "grafana.app/updatedTimestamp": "2026-08-02T05:16:25Z",
-      "grafana.app/folderTitle": "FluxenDB",
-      "grafana.app/folderUrl": "/dashboards/f/eftxmsfac0buob/fluxendb"
-    }
+    "name": "ad779gm"
   },
   "spec": {
     "annotations": [
@@ -57,7 +34,7 @@
         "spec": {
           "id": 1,
           "title": "Memory Usage",
-          "description": "Resident set size — physical RAM held by the FluxenDB process.",
+          "description": "Resident set size \u2014 physical RAM held by the FluxenDB process.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -735,7 +712,7 @@
                   "color": "rgba(255,0,255,0.7)"
                 },
                 "filterValues": {
-                  "le": 1e-9
+                  "le": 1e-09
                 },
                 "legend": {
                   "show": true
@@ -839,7 +816,7 @@
                   "color": "rgba(255,0,255,0.7)"
                 },
                 "filterValues": {
-                  "le": 1e-9
+                  "le": 1e-09
                 },
                 "legend": {
                   "show": true
