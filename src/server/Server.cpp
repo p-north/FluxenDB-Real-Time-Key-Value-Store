@@ -19,7 +19,8 @@ static Server *globalServer = nullptr;
 // Example: CTRL-C signal shutdown
 void signalHandler(int signum)
 {
-    if (globalServer){
+    if (globalServer)
+    {
         std::cout << "Caught signal " << signum << ", shutting down...\n";
         globalServer->shutdown();
     }
@@ -88,7 +89,7 @@ void Server::run()
         return;
     }
 
-    if (listen(server_socket_fd, 128) < 0)
+    if (listen(server_socket_fd, 10000) < 0)
     {
         std::cerr << "Error Listening ON Server Socket\n";
         return;
@@ -121,13 +122,14 @@ void Server::run()
     }
 
     while (running)
-    {   
-        
-        new_events = epoll_wait(epollfd, events, MAX_EVENTS, 500);  // 500ms timeout
+    {
+
+        new_events = epoll_wait(epollfd, events, MAX_EVENTS, 500); // 500ms timeout
 
         if (new_events == -1)
         {
-            if (errno == EINTR) continue; // interrupted by signal, check running
+            if (errno == EINTR)
+                continue; // interrupted by signal, check running
             std::cerr << "Error in epoll_wait..\n";
             break;
         }
@@ -139,24 +141,29 @@ void Server::run()
             // new connection?
             if (events[i].data.fd == server_socket_fd)
             {
-                sock_conn_fd = accept4(server_socket_fd, (struct sockaddr *)&client_addr, &client_len, SOCK_NONBLOCK);
-                if (sock_conn_fd == -1)
+                while (1)
                 {
-                    if (errno == EAGAIN || errno == EWOULDBLOCK) continue; // no connection ready
-                    std::cerr << "Error accepting new client connection..\n";
-                    continue;
-                }
+                    client_len = sizeof(client_addr);
+                    sock_conn_fd = accept4(server_socket_fd, (struct sockaddr *)&client_addr, &client_len, SOCK_NONBLOCK);
+                    if (sock_conn_fd == -1)
+                    {
+                        if (errno == EAGAIN || errno == EWOULDBLOCK)
+                            break; // no connection ready
+                        std::cerr << "Error accepting new client connection: " << strerror(errno) << "\n";
+                        break;
+                    }
 
-                Metrics::getInstance().addClient();
-                std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTER "<<sock_conn_fd<< " CONNECTED\n";
+                    Metrics::getInstance().addClient();
+                    std::cout << "\nCLIENT_SOCKET_FILE_DESCRIPTER " << sock_conn_fd << " CONNECTED\n";
 
-
-                ev.events = EPOLLIN | EPOLLRDHUP;
-                ev.data.fd = sock_conn_fd;
-                if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock_conn_fd, &ev) == -1)
-                {
-                    std::cerr << "Error adding new event to epoll..\n";
-                    continue;
+                    ev.events = EPOLLIN | EPOLLRDHUP;
+                    ev.data.fd = sock_conn_fd;
+                    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sock_conn_fd, &ev) == -1)
+                    {
+                        std::cerr << "Error adding new event to epoll..\n";
+                        close(sock_conn_fd);
+                        Metrics::getInstance().removeClient();
+                    }
                 }
             }
             else
@@ -167,35 +174,43 @@ void Server::run()
 
                 int bytes_received = recv(newsockfd, buffer, MAX_MESSAGE_LEN, 0);
 
-                if(bytes_received == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) continue; // no data yet, not an error
+                if (bytes_received == -1)
+                {
+                    if (errno == EAGAIN || errno == EWOULDBLOCK)
+                        continue; // no data yet, not an error
 
-                if(bytes_received == -1){
                     std::cerr << "recv error on fd" << newsockfd << ": " << strerror(errno) << "\n";
+                    close(newsockfd);
+                    continue;
                 }
 
-                if(bytes_received > 0){
+                if (bytes_received > 0)
+                {
                     // execute command and parse resp
                     std::string request(buffer, bytes_received);
                     std::string response = cmdHandler.processCommand(request);
 
                     // send response
                     ssize_t sent = send(newsockfd, response.c_str(), response.size(), 0);
-                    if (sent == -1){
+                    if (sent == -1)
+                    {
                         std::cerr << "send failed on fd " << newsockfd << ": " << strerror(errno) << "\n";
                     }
                 }
 
-                if(bytes_received <= 0 || (events[i].events & EPOLLRDHUP)){
+                if (bytes_received == 0 || (events[i].events & EPOLLRDHUP))
+                {
                     epoll_ctl(epollfd, EPOLL_CTL_DEL, newsockfd, nullptr);
                     close(newsockfd);
-                    std::cout<<"\nCLIENT_SOCKET_FILE_DESCRIPTER "<<newsockfd<< " DISCONNECTED""\n";
-                    Metrics::getInstance().removeClient(); 
+                    std::cout << "\nCLIENT_SOCKET_FILE_DESCRIPTER " << newsockfd << " DISCONNECTED"
+                                                                                    "\n";
+                    Metrics::getInstance().removeClient();
+                    continue;
                 }
             }
-        } 
+        }
     }
     close(epollfd);
-
 
     // before shutdown check for persistent db
     if (Database::getInstance().dump("dump.my_db"))
