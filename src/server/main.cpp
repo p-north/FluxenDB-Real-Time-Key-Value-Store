@@ -11,18 +11,15 @@ int main(int argc, char* argv[]){
 
     std::thread metrics(startMetricsServer);
     std::cout << "Metrics http server listening on port " << METRICS_PORT << std::endl;
-
-    int port = 6379;    // default port
-    if(argc >=2) port = std::stoi(argv[1]);      // client provided port
-
-    if(Database::getInstance().load("dump.my_rdb"))
-        std::cout << "Database loaded from dump file\n";
-    else
-        std::cout << "No dump found or load failed; starting with an empty database.\n";
-
-
-    Server server(port);   
     
+    if(Database::getInstance().load("dump.my_db"))
+    std::cout << "Database loaded from dump file\n";
+    else
+    std::cout << "No dump found or load failed; starting with an empty database.\n";
+    
+    Server server = argc < 2 ? Server(6379): Server(std::stoi(argv[1])); 
+
+
     // Background persistance: dump the database every 300s
     std::thread persistanceThread([](){
         while(true){

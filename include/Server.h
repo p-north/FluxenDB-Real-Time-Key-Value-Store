@@ -8,7 +8,7 @@
 class Server{
     private:
         int port;
-        int server_socket;
+        int server_socket_fd;
         std::atomic<bool> running;
 
         // Seup signal handling for graceful shutdwn (ctrl + c)
