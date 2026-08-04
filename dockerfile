@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     ca-certificates \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 COPY . /app
