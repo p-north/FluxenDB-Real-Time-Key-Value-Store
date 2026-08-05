@@ -10,6 +10,7 @@
 int main(int argc, char* argv[]){
 
     std::thread metrics(startMetricsServer);
+    metrics.detach();
     std::cout << "Metrics http server listening on port " << METRICS_PORT << std::endl;
 
     int port = 6379;    // default port
@@ -22,26 +23,9 @@ int main(int argc, char* argv[]){
 
 
     Server server(port);   
-    
-    // Background persistance: dump the database every 300s
-    std::thread persistanceThread([](){
-        while(true){
-            std::this_thread::sleep_for(std::chrono::seconds(300));
-            // dump/load the datbase
-            if(!Database::getInstance().dump("dump.my_db"))
-                std::cerr << "Error dumping database\n";
-            else    
-                std::cout  << "SERVER_MAIN: Database Dumped to dump.my_db\n";
-
-        }
-    });
-    persistanceThread.detach();
 
     // run the server
     server.run();
-
-    // join metrics server thread
-    metrics.join();
     
     return 0;
 }
