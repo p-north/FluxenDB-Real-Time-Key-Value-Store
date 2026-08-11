@@ -20,6 +20,14 @@ Supports strings, lists, and hashes with TCP client/server architecture, TTL exp
 
 ---
 
+## Demo
+
+[![FluxenDB Demo](https://img.youtube.com/vi/Ya1KvaqB0iU/maxresdefault.jpg)](https://www.youtube.com/watch?v=Ya1KvaqB0iU)
+
+> Click the thumbnail above to watch the full demo on YouTube.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
