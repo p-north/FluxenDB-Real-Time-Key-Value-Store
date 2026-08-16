@@ -22,7 +22,7 @@ Supports strings, lists, and hashes with TCP client/server architecture, TTL exp
 
 ## Demo
 
-[![FluxenDB Demo]([https://img.youtube.com/vi/Ya1KvaqB0iU/maxresdefault.jpg)](https://www.youtube.com/watch?v=Ya1KvaqB0iU](https://youtu.be/p4PHbvEEl_4))
+[![FluxenDB Demo](https://img.youtube.com/vi/p4PHbvEEl_4/maxresdefault.jpg)](https://www.youtube.com/watch?v=p4PHbvEEl_4)
 
 > Click the thumbnail above to watch the full demo on YouTube.
 
